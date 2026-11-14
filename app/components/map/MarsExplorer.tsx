@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type OLMap from "ol/Map";
 import type BaseLayer from "ol/layer/Base";
 import type LineString from "ol/geom/LineString";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import Draw from "ol/interaction/Draw";
-import { containsCoordinate } from "ol/extent";
+import { containsCoordinate, type Extent } from "ol/extent";
 import { unByKey } from "ol/Observable";
 
 import {
@@ -15,6 +15,10 @@ import {
   MARS_LAYER_DEFS,
 } from "../../config/mars-map";
 import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
+import {
+  isMarsLocationInRegion,
+  type MarsRegion,
+} from "../../data/mars-regions";
 import { pathLengthKm, type LonLat, type RouteInfo } from "../../lib/mars-geo";
 import MapComponent from "./MapComponent";
 import MapSidePanel, { type OverlayState } from "./MapSidePanel";
@@ -22,6 +26,7 @@ import MapToolbar, { type MapMode } from "./MapToolbar";
 import { createMarsTrekLayer } from "./marsTrekLayer";
 import {
   createMarkerLayer,
+  createMarsRegionLayer,
   createRouteLayer,
   placeToFeature,
   routeStyle,
@@ -42,7 +47,19 @@ const HINTS: Record<MapMode, string | null> = {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
-export default function MarsExplorer() {
+interface MarsExplorerProps {
+  initialCenter?: LonLat;
+  initialZoom?: number;
+  initialExtent?: Extent;
+  region?: MarsRegion;
+}
+
+export default function MarsExplorer({
+  initialCenter,
+  initialZoom,
+  initialExtent,
+  region,
+}: MarsExplorerProps) {
   const [map, setMap] = useState<OLMap | null>(null);
   const [layers, setLayers] = useState<BaseLayer[]>(NO_LAYERS);
   const [mode, setMode] = useState<MapMode>("pan");
@@ -59,7 +76,16 @@ export default function MarsExplorer() {
       ]),
     ),
   );
-  const [places, setPlaces] = useState<MarsPlace[]>(MARS_PLACES);
+  const visibleDefaultPlaces = useMemo(
+    () =>
+      region
+        ? MARS_PLACES.filter((place) =>
+            isMarsLocationInRegion(region, place.lon, place.lat),
+          )
+        : MARS_PLACES,
+    [region],
+  );
+  const [places, setPlaces] = useState<MarsPlace[]>(() => visibleDefaultPlaces);
   const [routes, setRoutes] = useState<RouteInfo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -81,23 +107,30 @@ export default function MarsExplorer() {
           : {}),
       });
     });
+    const regionLayer = region ? createMarsRegionLayer(region) : null;
     const routeLayer = createRouteLayer();
     const markerLayer = createMarkerLayer(() => selectedRef.current);
 
     tileLayersRef.current = tileLayers;
     routeLayerRef.current = routeLayer;
     markerLayerRef.current = markerLayer;
-    setLayers([...Object.values(tileLayers), routeLayer, markerLayer]);
+    setLayers([
+      ...Object.values(tileLayers),
+      ...(regionLayer ? [regionLayer] : []),
+      routeLayer,
+      markerLayer,
+    ]);
 
     return () => {
       Object.values(tileLayers).forEach((l) => l.dispose());
+      regionLayer?.dispose();
       routeLayer.dispose();
       markerLayer.dispose();
       tileLayersRef.current = {};
       routeLayerRef.current = null;
       markerLayerRef.current = null;
     };
-  }, []);
+  }, [region]);
 
   // Layer visibility / opacity
   useEffect(() => {
@@ -208,6 +241,7 @@ export default function MarsExplorer() {
         hitTolerance: 6,
       });
       setSelectedId(hit ? String(hit.getId()) : null);
+      if (hit) setPanelOpen(true);
     });
     return () => unByKey(key);
   }, [map, mode, layers]);
@@ -240,8 +274,24 @@ export default function MarsExplorer() {
   const selectedPlace = places.find((p) => p.id === selectedId) ?? null;
 
   return (
-    <MapComponent layers={layers} onMapReady={setMap}>
+    <MapComponent
+      layers={layers}
+      onMapReady={setMap}
+      initialCenter={initialCenter}
+      initialZoom={initialZoom}
+      initialExtent={initialExtent}
+    >
       <MapToolbar mode={mode} onModeChange={setMode} />
+
+      {places.some((place) => !place.userAdded) && (
+        <div className="pointer-events-none absolute left-16 top-3 z-10 flex items-center gap-2 rounded-lg border border-emerald-300/15 bg-slate-950/85 px-3 py-2 text-[10px] text-slate-200 shadow-lg backdrop-blur-md">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 ring-4 ring-emerald-400/10" />
+          <span className="font-semibold uppercase tracking-[0.12em] text-emerald-100/90">
+            Science locations
+          </span>
+          <span className="hidden text-slate-500 sm:inline">· click a marker for details</span>
+        </div>
+      )}
 
       {hint && (
         <div

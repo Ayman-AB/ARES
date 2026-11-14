@@ -45,16 +45,80 @@ export const MARS_VIEW_DEFAULTS = {
   maxZoom: LEVELS - 1,
 };
 
-const WMTS_BASE_URL = (
-  process.env.NEXT_PUBLIC_MARS_WMTS_BASE_URL ?? "https://api.nasa.gov/mars-wmts/catalog"
-).replace(/\/$/, "");
+export const MARS_VIKING_LAYER_ID = "Mars_Viking_MDIM21_ClrMosaic_global_232m";
+const WMTS_BASE_URL = "https://trek.nasa.gov/tiles/Mars/EQ";
 
 export const MARS_TREK_WMTS = {
   baseUrl: WMTS_BASE_URL,
   style: "default",
   matrixSet: "default028mm",
+  format: "image/jpeg",
+  layerId: MARS_VIKING_LAYER_ID,
   attribution: "Imagery: NASA/JPL Mars Trek · USGS Astrogeology",
+  capabilitiesUrl: `${WMTS_BASE_URL}/${MARS_VIKING_LAYER_ID}/1.0.0/WMTSCapabilities.xml`,
 };
+
+function getChildrenByLocalName(parent: Element, localName: string) {
+  return Array.from(parent.getElementsByTagNameNS("*", localName));
+}
+
+export async function discoverMarsTrekLayerConfig(layerId: string = MARS_VIKING_LAYER_ID) {
+  const response = await fetch(
+    `${WMTS_BASE_URL}/${layerId}/1.0.0/WMTSCapabilities.xml`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(`NASA Mars Trek GetCapabilities failed (${response.status})`);
+  }
+
+  const xml = new DOMParser().parseFromString(await response.text(), "application/xml");
+  if (xml.querySelector("parsererror")) {
+    throw new Error("NASA Mars Trek returned invalid WMTS capabilities XML");
+  }
+
+  const layer = getChildrenByLocalName(xml.documentElement, "Layer").find(
+    (node) => getChildrenByLocalName(node, "Identifier")[0]?.textContent?.trim() === layerId,
+  );
+  if (!layer) {
+    throw new Error(`NASA Mars Trek WMTS layer "${layerId}" was not found`);
+  }
+
+  const styleNodes = getChildrenByLocalName(layer, "Style");
+  const styleNode = styleNodes.find((node) => node.getAttribute("isDefault") === "true") ??
+    styleNodes[0];
+  const style = styleNode
+    ? getChildrenByLocalName(styleNode, "Identifier")[0]?.textContent?.trim()
+    : undefined;
+  const format = getChildrenByLocalName(layer, "Format")[0]?.textContent?.trim();
+  const tileMatrixSetID = getChildrenByLocalName(layer, "TileMatrixSet")[0]?.textContent?.trim();
+  const resource = getChildrenByLocalName(layer, "ResourceURL").find(
+    (node) => node.getAttribute("resourceType") === "tile",
+  );
+  const tileMatrixSet = getChildrenByLocalName(xml.documentElement, "TileMatrixSet").find(
+    (node) =>
+      getChildrenByLocalName(node, "Identifier")[0]?.textContent?.trim() === tileMatrixSetID &&
+      getChildrenByLocalName(node, "TileMatrix").length > 0,
+  );
+  const tileMatrixLabels = tileMatrixSet
+    ? getChildrenByLocalName(tileMatrixSet, "TileMatrix").map(
+        (node) => getChildrenByLocalName(node, "Identifier")[0]?.textContent?.trim() ?? "",
+      )
+    : [];
+  const tileUrlTemplate = resource?.getAttribute("template");
+
+  if (!style || !format || !tileMatrixSetID || !tileUrlTemplate || tileMatrixLabels.length === 0) {
+    throw new Error(`NASA Mars Trek WMTS capabilities are incomplete for "${layerId}"`);
+  }
+
+  return {
+    layer: layerId,
+    style,
+    format,
+    tileMatrixSetID,
+    tileMatrixLabels,
+    tileUrlTemplate,
+  };
+}
 
 export interface MarsLayerDef {
   id: string;
@@ -63,7 +127,7 @@ export interface MarsLayerDef {
   /** Trek product name (path segment of the WMTS URL). */
   product: string;
   extension: "jpg" | "png";
-  /** Deepest native tile level. Estimate; lower it if you see 404s. */
+  /** Deepest tile matrix advertised by the WMTS service. */
   maxLevel: number;
   role: "base" | "overlay";
   defaultOpacity: number;
@@ -78,7 +142,7 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     subtitle: "Global, 232 m/px",
     product: "Mars_Viking_MDIM21_ClrMosaic_global_232m",
     extension: "jpg",
-    maxLevel: 9,
+    maxLevel: 7,
     role: "base",
     defaultOpacity: 1,
   },
@@ -87,8 +151,8 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     title: "THEMIS IR day mosaic",
     subtitle: "Thermal infrared, 100 m/px",
     product: "Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12_clon0_ly",
-    extension: "jpg",
-    maxLevel: 9,
+    extension: "png",
+    maxLevel: 8,
     role: "base",
     defaultOpacity: 1,
   },
@@ -125,5 +189,5 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
 ];
 
 export function marsTrekTileUrl(def: MarsLayerDef) {
-  return `${MARS_TREK_WMTS.baseUrl}/${def.product}/1.0.0/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.${def.extension}`;
+  return `${MARS_TREK_WMTS.baseUrl}/${def.product}/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.${def.extension}`;
 }
