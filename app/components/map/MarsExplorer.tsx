@@ -241,6 +241,7 @@ export default function MarsExplorer({
         hitTolerance: 6,
       });
       setSelectedId(hit ? String(hit.getId()) : null);
+      if (hit) setPanelOpen(true);
     });
     return () => unByKey(key);
   }, [map, mode, layers]);
@@ -281,6 +282,16 @@ export default function MarsExplorer({
       initialExtent={initialExtent}
     >
       <MapToolbar mode={mode} onModeChange={setMode} />
+
+      {places.some((place) => !place.userAdded) && (
+        <div className="pointer-events-none absolute left-16 top-3 z-10 flex items-center gap-2 rounded-lg border border-emerald-300/15 bg-slate-950/85 px-3 py-2 text-[10px] text-slate-200 shadow-lg backdrop-blur-md">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 ring-4 ring-emerald-400/10" />
+          <span className="font-semibold uppercase tracking-[0.12em] text-emerald-100/90">
+            Science locations
+          </span>
+          <span className="hidden text-slate-500 sm:inline">· click a marker for details</span>
+        </div>
+      )}
 
       {hint && (
         <div
