@@ -1,3 +1,6 @@
+import LineString from "ol/geom/LineString";
+import { getLength } from "ol/sphere";
+
 import { MARS_RADIUS_M } from "../config/mars-map";
 
 export type LonLat = [number, number];
@@ -21,6 +24,19 @@ export function greatCircleKm([lon1, lat1]: LonLat, [lon2, lat2]: LonLat): numbe
   return 2 * (MARS_RADIUS_M / 1000) * Math.asin(Math.min(1, Math.sqrt(a)));
 }
 
+/**
+ * Geodesic length of an OpenLayers LineString on the Mars sphere (metres).
+ *
+ * Note: `lineString.getLength()` on its own returns *planar* length in the
+ * projection's units — degrees for IAU:49900 — so it would ignore the
+ * cos(latitude) shrinking of longitude and use Earth-less units. `ol/sphere`
+ * `getLength` walks the same geometry as great-circle segments; coordinates
+ * are already lon/lat so we pass EPSG:4326 (no reprojection) and Mars' radius.
+ */
+export function lineStringLengthM(line: LineString): number {
+  return getLength(line, { projection: "EPSG:4326", radius: MARS_RADIUS_M });
+}
+
 /** Sum of great-circle legs between consecutive vertices (km). */
 export function pathLengthKm(coords: LonLat[]): number {
   let total = 0;
@@ -28,8 +44,13 @@ export function pathLengthKm(coords: LonLat[]): number {
   return total;
 }
 
-export function formatLonLat(lon: number, lat: number): string {
-  return `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
+export function formatLonLat(lon: number, lat: number, digits = 2): string {
+  return `${Math.abs(lat).toFixed(digits)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(digits)}° ${lon >= 0 ? "E" : "W"}`;
+}
+
+/** `[lon, lat]` with fixed precision, handy for logs and copy-to-clipboard. */
+export function formatLonLatArray([lon, lat]: LonLat, digits = 5): string {
+  return `[${lon.toFixed(digits)}, ${lat.toFixed(digits)}]`;
 }
 
 export function formatKm(km: number): string {

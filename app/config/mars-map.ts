@@ -20,12 +20,16 @@ addProjection(MARS_PROJECTION);
 
 /** Trek `default028mm` grid: 2x1 tiles at level 0, doubling each level. */
 const TILE_SIZE = 256;
-const LEVELS = 10; // matrices 0..9
 const LEVEL_0_RESOLUTION = 360 / (2 * TILE_SIZE); // deg/px
+/**
+ * Deepest zoom the *view* allows. Level 14 ≈ 5 m/px, enough for the 5 m CTX
+ * mosaic; coarser layers simply upscale their deepest tiles past their maxLevel.
+ */
+export const MARS_VIEW_MAX_LEVEL = 14;
 
 /** Grid limited to `maxLevel`; deeper view zooms upscale the last level. */
-export function getMarsTileGrid(maxLevel: number = LEVELS - 1) {
-  const count = Math.min(maxLevel, LEVELS - 1) + 1;
+export function getMarsTileGrid(maxLevel: number = MARS_VIEW_MAX_LEVEL) {
+  const count = Math.min(maxLevel, MARS_VIEW_MAX_LEVEL) + 1;
   return {
     origin: [-180, 90] as [number, number],
     tileSize: TILE_SIZE,
@@ -38,11 +42,18 @@ export function getMarsTileGrid(maxLevel: number = LEVELS - 1) {
 /** Full grid: used by the View so zoom N === TileMatrix N. */
 export const MARS_TILE_GRID = getMarsTileGrid();
 
+/** Jezero Crater (IAU/USGS Gazetteer centre). */
+export const JEZERO_CENTER: [number, number] = [77.58, 18.38];
+/** Western fan delta + Perseverance landing area: where the missions happen. */
+export const JEZERO_OPS_CENTER: [number, number] = [77.4, 18.46];
+/** [minLon, minLat, maxLon, maxLat] framing the whole ~45 km crater. */
+export const JEZERO_EXTENT: [number, number, number, number] = [77.1, 18.0, 78.05, 18.78];
+
 export const MARS_VIEW_DEFAULTS = {
-  center: [0, 0] as [number, number],
-  zoom: 1,
+  center: JEZERO_OPS_CENTER,
+  zoom: 9,
   minZoom: 0,
-  maxZoom: LEVELS - 1,
+  maxZoom: MARS_VIEW_MAX_LEVEL,
 };
 
 export const MARS_VIKING_LAYER_ID = "Mars_Viking_MDIM21_ClrMosaic_global_232m";
@@ -131,11 +142,27 @@ export interface MarsLayerDef {
   maxLevel: number;
   role: "base" | "overlay";
   defaultOpacity: number;
+  /**
+   * Resolve the real tile URL template / depth from WMTSCapabilities.xml at
+   * runtime (used for products whose path or depth we don't hard-code).
+   */
+  discover?: boolean;
 }
 
 export const MARS_DEFAULT_BASE_ID = "viking-color";
 
 export const MARS_LAYER_DEFS: MarsLayerDef[] = [
+  {
+    id: "ctx-mosaic",
+    title: "CTX global mosaic",
+    subtitle: "MRO Context Camera, ~5 m/px (Caltech Murray Lab)",
+    product: "CTX_beta01_uncontrolled_5m_Caltech",
+    extension: "png",
+    maxLevel: 13,
+    role: "base",
+    defaultOpacity: 1,
+    discover: true,
+  },
   {
     id: "viking-color",
     title: "Viking color mosaic",
@@ -189,5 +216,5 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
 ];
 
 export function marsTrekTileUrl(def: MarsLayerDef) {
-  return `${MARS_TREK_WMTS.baseUrl}/${def.product}/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.${def.extension}`;
+  return `${MARS_TREK_WMTS.baseUrl}/${def.product}/1.0.0/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.${def.extension}`;
 }
