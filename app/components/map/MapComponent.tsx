@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Map from "ol/Map";
 import View from "ol/View";
 import BaseLayer from "ol/layer/Base";
@@ -9,7 +9,9 @@ import { defaults as defaultInteractions } from "ol/interaction/defaults";
 import "ol/ol.css";
 
 import {
+  MARS_DEFAULT_BASE_ID,
   MARS_EXTENT,
+  MARS_LAYER_DEFS,
   MARS_PROJECTION,
   MARS_TILE_GRID,
   MARS_TREK_WMTS,
@@ -19,16 +21,22 @@ import { createMarsTrekLayer } from "./marsTrekLayer";
 
 export interface MapComponentProps {
   className?: string;
-  /** Overrides the default Mars Trek base layer. Pass a stable (memoized) array. */
+  /** Layers to display (stable array). Omit to show the default Mars Trek base layer. */
   layers?: BaseLayer[];
-  /** Called once the map exists so later features (markers, routes) can attach to it. */
+  /** Called once the map exists so features (markers, routes) can attach to it. */
   onMapReady?: (map: Map) => void;
+  /** Imagery credit shown bottom-right. */
+  attribution?: string;
+  /** Absolutely-positioned UI rendered on top of the map. */
+  children?: ReactNode;
 }
 
 export default function MapComponent({
   className = "",
   layers,
   onMapReady,
+  attribution = MARS_TREK_WMTS.attribution,
+  children,
 }: MapComponentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
@@ -50,8 +58,7 @@ export default function MapComponent({
 
     const view = new View({
       projection: MARS_PROJECTION,
-      // Same resolutions as the WMTS grid, so zoom N === TileMatrix N
-      resolutions: MARS_TILE_GRID.resolutions,
+      resolutions: MARS_TILE_GRID.resolutions, // zoom N === TileMatrix N
       center: MARS_VIEW_DEFAULTS.center,
       zoom: MARS_VIEW_DEFAULTS.zoom,
       minZoom: MARS_VIEW_DEFAULTS.minZoom,
@@ -64,19 +71,12 @@ export default function MapComponent({
       layers: [],
       view,
       controls: defaultControls({ zoom: false, rotate: false, attribution: false }),
-      interactions: defaultInteractions({
-        altShiftDragRotate: false,
-        pinchRotate: false,
-      }),
+      interactions: defaultInteractions({ altShiftDragRotate: false, pinchRotate: false }),
     });
 
     const updateStatus = () => {
       const c = view.getCenter();
-      setStatus({
-        zoom: view.getZoom() ?? 0,
-        lon: c?.[0] ?? 0,
-        lat: c?.[1] ?? 0,
-      });
+      setStatus({ zoom: view.getZoom() ?? 0, lon: c?.[0] ?? 0, lat: c?.[1] ?? 0 });
     };
     map.on("moveend", updateStatus);
 
@@ -98,13 +98,16 @@ export default function MapComponent({
 
     const collection = map.getLayers();
     const owned = layers === undefined;
+    const defaultDef = MARS_LAYER_DEFS.find((d) => d.id === MARS_DEFAULT_BASE_ID);
     const active: BaseLayer[] = owned
-      ? [
-          createMarsTrekLayer({
-            onTileError: () => setTileError(true),
-            onTileLoad: () => setTileError(false),
-          }),
-        ]
+      ? defaultDef
+        ? [
+            createMarsTrekLayer(defaultDef, {
+              onTileError: () => setTileError(true),
+              onTileLoad: () => setTileError(false),
+            }),
+          ]
+        : []
       : layers;
 
     collection.clear();
@@ -149,18 +152,15 @@ export default function MapComponent({
 
       {/* Status readout */}
       <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-md bg-slate-900/80 px-2 py-1 font-mono text-xs text-slate-200 ring-1 ring-white/10">
-        zoom {status.zoom.toFixed(1)} · lon {status.lon.toFixed(2)}° · lat{" "}
-        {status.lat.toFixed(2)}°
+        zoom {status.zoom.toFixed(1)} · lon {status.lon.toFixed(2)}° · lat {status.lat.toFixed(2)}°
       </div>
 
       {/* Imagery credit */}
-      {layers === undefined && (
-        <div className="pointer-events-none absolute bottom-3 right-3 z-10 max-w-[55%] rounded-md bg-slate-900/80 px-2 py-1 text-right text-[10px] leading-tight text-slate-300 ring-1 ring-white/10">
-          {MARS_TREK_WMTS.attribution}
-        </div>
-      )}
+      <div className="pointer-events-none absolute bottom-3 right-3 z-10 max-w-[55%] rounded-md bg-slate-900/80 px-2 py-1 text-right text-[10px] leading-tight text-slate-300 ring-1 ring-white/10">
+        {attribution}
+      </div>
 
-      {/* Tile loading problem */}
+      {/* Tile loading problem (default layer only) */}
       {tileError && (
         <div
           role="status"
@@ -169,6 +169,8 @@ export default function MapComponent({
           Some Mars tiles failed to load
         </div>
       )}
+
+      {children}
     </div>
   );
 }

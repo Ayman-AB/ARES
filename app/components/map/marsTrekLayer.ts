@@ -4,35 +4,40 @@ import WMTSTileGrid from "ol/tilegrid/WMTS";
 
 import {
   MARS_PROJECTION,
-  MARS_TILE_GRID,
   MARS_TREK_WMTS,
+  getMarsTileGrid,
+  marsTrekTileUrl,
+  type MarsLayerDef,
 } from "../../config/mars-map";
 
-interface MarsTrekLayerHandlers {
+interface MarsTrekLayerOptions {
+  visible?: boolean;
+  opacity?: number;
+  zIndex?: number;
   onTileError?: () => void;
   onTileLoad?: () => void;
 }
 
-export function createMarsTrekLayer(handlers: MarsTrekLayerHandlers = {}) {
+export function createMarsTrekLayer(def: MarsLayerDef, options: MarsTrekLayerOptions = {}) {
   const source = new WMTS({
-    url: MARS_TREK_WMTS.url,
+    url: marsTrekTileUrl(def),
     requestEncoding: "REST",
-    layer: MARS_TREK_WMTS.layer,
+    layer: def.product,
     style: MARS_TREK_WMTS.style,
     matrixSet: MARS_TREK_WMTS.matrixSet,
     projection: MARS_PROJECTION,
-    tileGrid: new WMTSTileGrid({
-      origin: MARS_TILE_GRID.origin,
-      resolutions: MARS_TILE_GRID.resolutions,
-      matrixIds: MARS_TILE_GRID.matrixIds,
-      sizes: MARS_TILE_GRID.sizes,
-      tileSize: MARS_TILE_GRID.tileSize,
-    }),
+    tileGrid: new WMTSTileGrid(getMarsTileGrid(def.maxLevel)),
     wrapX: false,
   });
 
-  if (handlers.onTileError) source.on("tileloaderror", handlers.onTileError);
-  if (handlers.onTileLoad) source.on("tileloadend", handlers.onTileLoad);
+  if (options.onTileError) source.on("tileloaderror", options.onTileError);
+  if (options.onTileLoad) source.on("tileloadend", options.onTileLoad);
 
-  return new TileLayer({ source, properties: { id: "mars-trek-base" } });
+  return new TileLayer({
+    source,
+    visible: options.visible ?? true,
+    opacity: options.opacity ?? def.defaultOpacity,
+    zIndex: options.zIndex ?? 0,
+    properties: { id: def.id },
+  });
 }
