@@ -1,7 +1,8 @@
 import { MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { formatKm, formatLonLat, type RouteInfo } from "../../lib/mars-geo";
-
+import ScientificLocationsPanel from "./ScientificLocationsPanel";
+import PlaceInfoEditor from "./PlaceInfoEditor";
 export type OverlayState = Record<string, { visible: boolean; opacity: number }>;
 
 export interface MapSidePanelProps {
@@ -150,9 +151,12 @@ export default function MapSidePanel(props: MapSidePanelProps) {
                 {MARKER_STYLES[selectedPlace.kind].label} ·{" "}
                 {formatLonLat(selectedPlace.lon, selectedPlace.lat)}
               </p>
-              {selectedPlace.description && (
+                            {selectedPlace.description && (
                 <p className="mt-1 text-xs text-slate-300">{selectedPlace.description}</p>
               )}
+
+              <PlaceInfoEditor key={selectedPlace.id} placeId={selectedPlace.id} />
+
               {selectedPlace.userAdded && (
                 <button
                   type="button"
@@ -165,6 +169,9 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             </div>
           )}
         </section>
+
+        {/* Scientific locations (Jezero): details, geology, importance, photos */}
+        <ScientificLocationsPanel />
 
         <section>
           <div className="mb-1.5 flex items-center justify-between">
