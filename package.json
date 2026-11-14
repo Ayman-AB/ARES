@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "copy-cesium": "node -e \"const fs = require('fs'); ['Workers','ThirdParty','Assets','Widgets'].forEach(d => fs.cpSync('node_modules/cesium/Build/Cesium/' + d, 'public/cesium/' + d, { recursive: true }));\"",
+    "dev": "npm run copy-cesium && next dev",
+    "build": "npm run copy-cesium && next build",
     "start": "next start",
     "lint": "eslint"
   },
