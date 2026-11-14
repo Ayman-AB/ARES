@@ -127,7 +127,7 @@ export interface MarsLayerDef {
   /** Trek product name (path segment of the WMTS URL). */
   product: string;
   extension: "jpg" | "png";
-  /** Deepest native tile level. Estimate; lower it if you see 404s. */
+  /** Deepest tile matrix advertised by the WMTS service. */
   maxLevel: number;
   role: "base" | "overlay";
   defaultOpacity: number;
@@ -151,8 +151,8 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     title: "THEMIS IR day mosaic",
     subtitle: "Thermal infrared, 100 m/px",
     product: "Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12_clon0_ly",
-    extension: "jpg",
-    maxLevel: 9,
+    extension: "png",
+    maxLevel: 8,
     role: "base",
     defaultOpacity: 1,
   },
