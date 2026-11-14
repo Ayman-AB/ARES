@@ -26,9 +26,9 @@ export const scientificLocations: ScientificLocation[] = [
     importance:
       "The flat, safe terrain made the landing possible, and several science targets are within reach.",
     photos: [
-      { src: "/photos/landing-site-1.png", caption: "Rock on the Jezero crater floor (Mastcam-Z, Sol 2024)", credit: "NASA/JPL-Caltech/ASU" },
-      { src: "/photos/landing-site-2.png", caption: "Jezero crater floor terrain (Perseverance raw image)", credit: "NASA/JPL-Caltech/ASU" },
-      { src: "/photos/landing-site-3.png", caption: "Jezero crater floor terrain (Perseverance raw image)", credit: "NASA/JPL-Caltech/ASU" },
+      { src: "/photos/landing-site-1.jpg", caption: "Rock on the Jezero crater floor (Mastcam-Z, Sol 2024)", credit: "NASA/JPL-Caltech/ASU" },
+      { src: "/photos/landing-site-2.jpg", caption: "Jezero crater floor terrain (Perseverance raw image)", credit: "NASA/JPL-Caltech/ASU" },
+      { src: "/photos/landing-site-3.jpg", caption: "Jezero crater floor terrain (Perseverance raw image)", credit: "NASA/JPL-Caltech/ASU" },
     ],
   },
   {

@@ -1,8 +1,10 @@
 import { MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { formatKm, formatLonLat, type RouteInfo } from "../../lib/mars-geo";
+import { usePlaceInfo } from "../../lib/place-info";
 import ScientificLocationsPanel from "./ScientificLocationsPanel";
 import PlaceInfoEditor from "./PlaceInfoEditor";
+import SaveDataBar from "./SaveDataBar";
 export type OverlayState = Record<string, { visible: boolean; opacity: number }>;
 
 export interface MapSidePanelProps {
@@ -24,6 +26,9 @@ export interface MapSidePanelProps {
 const sectionTitle = "mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400";
 
 export default function MapSidePanel(props: MapSidePanelProps) {
+  const { all: placeInfo } = usePlaceInfo();
+  const nameOf = (p: MarsPlace) => placeInfo[p.id]?.name?.trim() || p.name;
+
   const {
     open, onOpenChange, baseId, onBaseChange, overlayState, onOverlayChange,
     places, selectedPlace, onSelectPlace, onRemovePlace, routes, onRemoveRoute, onClearRoutes,
@@ -138,7 +143,7 @@ export default function MapSidePanel(props: MapSidePanelProps) {
                   }`}
                 >
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_STYLES[p.kind].dot}`} />
-                  <span className="truncate">{p.name}</span>
+                  <span className="truncate">{nameOf(p)}</span>
                 </button>
               </li>
             ))}
@@ -146,16 +151,20 @@ export default function MapSidePanel(props: MapSidePanelProps) {
 
           {selectedPlace && (
             <div className="mt-2 rounded-md bg-white/5 p-2 ring-1 ring-white/10">
-              <p className="font-semibold">{selectedPlace.name}</p>
+              <p className="font-semibold">{nameOf(selectedPlace)}</p>
               <p className="text-xs text-slate-400">
                 {MARKER_STYLES[selectedPlace.kind].label} ·{" "}
                 {formatLonLat(selectedPlace.lon, selectedPlace.lat)}
               </p>
-                            {selectedPlace.description && (
+              {selectedPlace.description && (
                 <p className="mt-1 text-xs text-slate-300">{selectedPlace.description}</p>
               )}
 
-              <PlaceInfoEditor key={selectedPlace.id} placeId={selectedPlace.id} />
+              <PlaceInfoEditor
+                key={selectedPlace.id}
+                placeId={selectedPlace.id}
+                originalName={selectedPlace.name}
+              />
 
               {selectedPlace.userAdded && (
                 <button
@@ -211,7 +220,9 @@ export default function MapSidePanel(props: MapSidePanelProps) {
               ))}
             </ul>
           )}
-        </section>
+               </section>
+
+        <SaveDataBar />
       </div>
     </aside>
   );
