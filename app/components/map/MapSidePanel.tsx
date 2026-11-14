@@ -1,6 +1,7 @@
 import { MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { formatKm, formatLonLat, type RouteInfo } from "../../lib/mars-geo";
+import MarsLocationGallery from "./MarsLocationGallery";
 
 export type OverlayState = Record<string, { visible: boolean; opacity: number }>;
 
@@ -328,6 +329,7 @@ export default function MapSidePanel(props: MapSidePanelProps) {
                   {selectedPlace.description}
                 </p>
               )}
+              {!selectedPlace.userAdded && <MarsLocationGallery place={selectedPlace} />}
               {selectedPlace.userAdded && (
                 <button
                   type="button"
