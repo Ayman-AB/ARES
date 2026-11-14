@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type OLMap from "ol/Map";
 import type BaseLayer from "ol/layer/Base";
 import type LineString from "ol/geom/LineString";
 import DoubleClickZoom from "ol/interaction/DoubleClickZoom";
 import Draw from "ol/interaction/Draw";
-import { containsCoordinate } from "ol/extent";
+import { containsCoordinate, type Extent } from "ol/extent";
 import { unByKey } from "ol/Observable";
 
 import {
@@ -15,6 +15,10 @@ import {
   MARS_LAYER_DEFS,
 } from "../../config/mars-map";
 import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
+import {
+  isMarsLocationInRegion,
+  type MarsRegion,
+} from "../../data/mars-regions";
 import { pathLengthKm, type LonLat, type RouteInfo } from "../../lib/mars-geo";
 import MapComponent from "./MapComponent";
 import MapSidePanel, { type OverlayState } from "./MapSidePanel";
@@ -22,6 +26,7 @@ import MapToolbar, { type MapMode } from "./MapToolbar";
 import { createMarsTrekLayer } from "./marsTrekLayer";
 import {
   createMarkerLayer,
+  createMarsRegionLayer,
   createRouteLayer,
   placeToFeature,
   routeStyle,
@@ -42,7 +47,19 @@ const HINTS: Record<MapMode, string | null> = {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
-export default function MarsExplorer() {
+interface MarsExplorerProps {
+  initialCenter?: LonLat;
+  initialZoom?: number;
+  initialExtent?: Extent;
+  region?: MarsRegion;
+}
+
+export default function MarsExplorer({
+  initialCenter,
+  initialZoom,
+  initialExtent,
+  region,
+}: MarsExplorerProps) {
   const [map, setMap] = useState<OLMap | null>(null);
   const [layers, setLayers] = useState<BaseLayer[]>(NO_LAYERS);
   const [mode, setMode] = useState<MapMode>("pan");
@@ -59,7 +76,16 @@ export default function MarsExplorer() {
       ]),
     ),
   );
-  const [places, setPlaces] = useState<MarsPlace[]>(MARS_PLACES);
+  const visibleDefaultPlaces = useMemo(
+    () =>
+      region
+        ? MARS_PLACES.filter((place) =>
+            isMarsLocationInRegion(region, place.lon, place.lat),
+          )
+        : MARS_PLACES,
+    [region],
+  );
+  const [places, setPlaces] = useState<MarsPlace[]>(() => visibleDefaultPlaces);
   const [routes, setRoutes] = useState<RouteInfo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -81,23 +107,30 @@ export default function MarsExplorer() {
           : {}),
       });
     });
+    const regionLayer = region ? createMarsRegionLayer(region) : null;
     const routeLayer = createRouteLayer();
     const markerLayer = createMarkerLayer(() => selectedRef.current);
 
     tileLayersRef.current = tileLayers;
     routeLayerRef.current = routeLayer;
     markerLayerRef.current = markerLayer;
-    setLayers([...Object.values(tileLayers), routeLayer, markerLayer]);
+    setLayers([
+      ...Object.values(tileLayers),
+      ...(regionLayer ? [regionLayer] : []),
+      routeLayer,
+      markerLayer,
+    ]);
 
     return () => {
       Object.values(tileLayers).forEach((l) => l.dispose());
+      regionLayer?.dispose();
       routeLayer.dispose();
       markerLayer.dispose();
       tileLayersRef.current = {};
       routeLayerRef.current = null;
       markerLayerRef.current = null;
     };
-  }, []);
+  }, [region]);
 
   // Layer visibility / opacity
   useEffect(() => {
@@ -240,7 +273,13 @@ export default function MarsExplorer() {
   const selectedPlace = places.find((p) => p.id === selectedId) ?? null;
 
   return (
-    <MapComponent layers={layers} onMapReady={setMap}>
+    <MapComponent
+      layers={layers}
+      onMapReady={setMap}
+      initialCenter={initialCenter}
+      initialZoom={initialZoom}
+      initialExtent={initialExtent}
+    >
       <MapToolbar mode={mode} onModeChange={setMode} />
 
       {hint && (

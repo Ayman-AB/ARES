@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Map from "ol/Map";
 import View from "ol/View";
 import BaseLayer from "ol/layer/Base";
+import type { Extent } from "ol/extent";
 import { defaults as defaultControls } from "ol/control/defaults";
 import { defaults as defaultInteractions } from "ol/interaction/defaults";
 import "ol/ol.css";
@@ -21,6 +22,9 @@ import { createMarsTrekLayer } from "./marsTrekLayer";
 
 export interface MapComponentProps {
   className?: string;
+  initialCenter?: [number, number];
+  initialZoom?: number;
+  initialExtent?: Extent;
   /** Layers to display (stable array). Omit to show the default Mars Trek base layer. */
   layers?: BaseLayer[];
   /** Called once the map exists so features (markers, routes) can attach to it. */
@@ -33,6 +37,9 @@ export interface MapComponentProps {
 
 export default function MapComponent({
   className = "",
+  initialCenter = MARS_VIEW_DEFAULTS.center,
+  initialZoom = MARS_VIEW_DEFAULTS.zoom,
+  initialExtent,
   layers,
   onMapReady,
   attribution = MARS_TREK_WMTS.attribution,
@@ -59,8 +66,8 @@ export default function MapComponent({
     const view = new View({
       projection: MARS_PROJECTION,
       resolutions: MARS_TILE_GRID.resolutions, // zoom N === TileMatrix N
-      center: MARS_VIEW_DEFAULTS.center,
-      zoom: MARS_VIEW_DEFAULTS.zoom,
+      center: initialCenter,
+      zoom: initialZoom,
       minZoom: MARS_VIEW_DEFAULTS.minZoom,
       maxZoom: MARS_VIEW_DEFAULTS.maxZoom,
       extent: MARS_EXTENT,
@@ -73,6 +80,20 @@ export default function MapComponent({
       controls: defaultControls({ zoom: false, rotate: false, attribution: false }),
       interactions: defaultInteractions({ altShiftDragRotate: false, pinchRotate: false }),
     });
+    if (initialExtent) {
+      const fitInitialExtent = () => {
+        const size = map.getSize();
+        if (size) {
+          view.fit(initialExtent, {
+            size,
+            padding: [40, 40, 40, 40],
+            maxZoom: 5,
+          });
+        }
+      };
+      if (map.getSize()) fitInitialExtent();
+      else map.once("rendercomplete", fitInitialExtent);
+    }
 
     const updateStatus = () => {
       const c = view.getCenter();
@@ -89,7 +110,7 @@ export default function MapComponent({
       map.dispose();
       mapRef.current = null;
     };
-  }, []);
+  }, [initialCenter, initialExtent, initialZoom]);
 
   // Sync layers (default = Mars Trek base layer, created and disposed here)
   useEffect(() => {

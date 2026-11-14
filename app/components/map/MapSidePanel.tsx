@@ -20,7 +20,7 @@ export interface MapSidePanelProps {
   onClearRoutes: () => void;
 }
 
-const sectionTitle = "mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400";
+const sectionTitle = "text-xs font-semibold tracking-wide text-slate-100";
 
 export default function MapSidePanel(props: MapSidePanelProps) {
   const {
@@ -33,131 +33,306 @@ export default function MapSidePanel(props: MapSidePanelProps) {
       <button
         type="button"
         onClick={() => onOpenChange(true)}
-        className="absolute right-3 top-3 z-20 rounded-md bg-slate-900/90 px-3 py-2 text-xs font-semibold text-white shadow ring-1 ring-white/20 hover:bg-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+        aria-label="Open layers and places panel"
+        title="Open map console"
+        className="absolute right-3 top-3 z-20 flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-[#0b111a]/95 text-orange-200 shadow-[0_12px_35px_rgba(0,0,0,0.4)] backdrop-blur-xl transition hover:border-orange-300/30 hover:bg-[#141d29] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
       >
-        Layers &amp; places
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+          <path
+            d="m12 3 9 5-9 5-9-5 9-5Z M3 12l9 5 9-5 M3 16l9 5 9-5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     );
   }
 
   const baseDefs = MARS_LAYER_DEFS.filter((d) => d.role === "base");
   const overlayDefs = MARS_LAYER_DEFS.filter((d) => d.role === "overlay");
+  const activeBase = baseDefs.find((d) => d.id === baseId);
 
   return (
     <aside
       aria-label="Map layers and places"
-      className="absolute right-3 top-3 z-20 flex max-h-[calc(100%-1.5rem)] w-72 max-w-[calc(100%-5rem)] flex-col overflow-hidden rounded-lg bg-slate-900/90 text-sm text-slate-100 shadow-lg ring-1 ring-white/10 backdrop-blur"
+      className="absolute right-3 top-3 z-20 flex max-h-[calc(100%-1.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d14]/95 text-sm text-slate-100 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
     >
-      <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-        <h3 className="font-semibold">Layers &amp; places</h3>
-        <button
-          type="button"
-          onClick={() => onOpenChange(false)}
-          aria-label="Close panel"
-          className="rounded px-2 text-lg leading-none text-slate-300 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-        >
-          ×
-        </button>
+      <div className="relative overflow-hidden border-b border-white/[0.08] bg-[#101923] px-4 pb-4 pt-4">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-12 -top-20 h-44 w-44 rounded-full bg-orange-400/[0.09] blur-3xl"
+        />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-orange-300/20 bg-[#201b17] text-orange-200 shadow-inner shadow-orange-200/[0.04]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px]">
+                <path
+                  d="M12 3v18M3 12h18M5.64 5.64l12.72 12.72m0-12.72L5.64 18.36"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#101923] bg-emerald-300" />
+            </span>
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-orange-200/65">
+                ARES / MARS OPERATIONS
+              </p>
+              <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
+                Map inspector
+              </h3>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            aria-label="Close panel"
+            className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-black/10 text-lg leading-none text-slate-400 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+          >
+            ×
+          </button>
+        </div>
+        <div className="relative mt-4 flex items-end justify-between gap-3 border-t border-white/[0.07] pt-3">
+          <div className="min-w-0">
+            <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+              Active imagery
+            </p>
+            <p className="mt-1 truncate text-xs font-medium text-slate-200">
+              {activeBase?.title ?? "No base layer selected"}
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md border border-emerald-300/15 bg-emerald-300/[0.06] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-200/80">
+            Mars surface
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-4 overflow-y-auto p-3">
+      <div className="flex items-center border-b border-white/[0.07] bg-black/10 px-4 py-2.5">
+        <div className="flex flex-1 items-center gap-2.5">
+          <span className="font-mono text-lg font-medium leading-none text-slate-100">
+            {places.length.toString().padStart(2, "0")}
+          </span>
+          <span className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+            Places
+          </span>
+        </div>
+        <span className="h-5 w-px bg-white/[0.08]" />
+        <div className="flex flex-1 items-center justify-end gap-2.5">
+          <span className="font-mono text-lg font-medium leading-none text-orange-200">
+            {routes.length.toString().padStart(2, "0")}
+          </span>
+          <span className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+            Routes
+          </span>
+        </div>
+      </div>
+
+      <div className="min-h-0 space-y-5 overflow-y-auto px-4 py-4">
         <section>
-          <h4 className={sectionTitle}>Base map</h4>
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="font-mono text-[10px] text-orange-300/80">01</span>
+            <h4 className={sectionTitle}>Surface imagery</h4>
+            <span className="ml-auto text-[9px] uppercase tracking-[0.14em] text-slate-600">
+              Source
+            </span>
+          </div>
           <div className="space-y-1">
             {baseDefs.map((d) => (
-              <label key={d.id} className="flex cursor-pointer items-start gap-2">
+              <label
+                key={d.id}
+                className={`group relative flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition focus-within:ring-2 focus-within:ring-orange-300/70 ${
+                  baseId === d.id
+                    ? "border-orange-300/20 bg-gradient-to-r from-orange-300/[0.08] to-transparent"
+                    : "border-transparent hover:border-white/[0.06] hover:bg-white/[0.025]"
+                }`}
+              >
                 <input
                   type="radio"
                   name="mars-base-layer"
                   checked={baseId === d.id}
                   onChange={() => onBaseChange(d.id)}
-                  className="mt-1 accent-orange-400"
+                  className="peer sr-only"
                 />
-                <span>
-                  {d.title}
-                  <span className="block text-xs text-slate-400">{d.subtitle}</span>
+                <span
+                  aria-hidden="true"
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition ${
+                    baseId === d.id
+                      ? "border-orange-300 bg-orange-300/10"
+                      : "border-slate-600 group-hover:border-slate-400"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full bg-orange-300 transition ${
+                      baseId === d.id ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                    }`}
+                  />
                 </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-100">{d.title}</span>
+                  <span className="mt-0.5 block text-[10px] leading-4 text-slate-500">
+                    {d.subtitle}
+                  </span>
+                </span>
+                {baseId === d.id && (
+                  <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-orange-200/80">
+                    Active
+                  </span>
+                )}
               </label>
             ))}
           </div>
         </section>
 
         <section>
-          <h4 className={sectionTitle}>Overlays</h4>
-          <div className="space-y-2">
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="font-mono text-[10px] text-orange-300/80">02</span>
+            <h4 className={sectionTitle}>Science overlays</h4>
+            <span className="ml-auto text-[9px] uppercase tracking-[0.14em] text-slate-600">
+              Blend
+            </span>
+          </div>
+          <div className="divide-y divide-white/[0.06] border-y border-white/[0.06]">
             {overlayDefs.map((d) => {
               const state = overlayState[d.id];
               return (
-                <div key={d.id}>
-                  <label className="flex cursor-pointer items-start gap-2">
+                <div key={d.id} className="py-2.5 first:pt-3 last:pb-3">
+                  <label className="flex cursor-pointer items-center gap-3">
                     <input
                       type="checkbox"
                       checked={state.visible}
                       onChange={(e) => onOverlayChange(d.id, { visible: e.target.checked })}
-                      className="mt-1 accent-orange-400"
+                      className="peer sr-only"
                     />
-                    <span>
-                      {d.title}
-                      <span className="block text-xs text-slate-400">{d.subtitle}</span>
+                    <span
+                      aria-hidden="true"
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] transition ${
+                        state.visible
+                          ? "border-orange-300/20 bg-orange-300/[0.08] text-orange-200"
+                          : "border-white/[0.06] bg-white/[0.025] text-slate-500"
+                      }`}
+                    >
+                      ◈
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-medium text-slate-200">{d.title}</span>
+                      <span className="mt-0.5 block text-[10px] leading-4 text-slate-500">
+                        {d.subtitle}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`relative h-5 w-9 shrink-0 rounded-full border transition peer-focus-visible:ring-2 peer-focus-visible:ring-orange-300/70 ${
+                        state.visible
+                          ? "border-orange-300/30 bg-orange-300/20"
+                          : "border-white/10 bg-white/[0.04]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-3.5 w-3.5 rounded-full transition-all ${
+                          state.visible
+                            ? "left-[17px] bg-orange-200 shadow-[0_0_8px_rgba(253,186,116,0.5)]"
+                            : "left-0.5 bg-slate-500"
+                        }`}
+                      />
                     </span>
                   </label>
                   {state.visible && (
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={5}
-                      value={Math.round(state.opacity * 100)}
-                      onChange={(e) =>
-                        onOverlayChange(d.id, { opacity: Number(e.target.value) / 100 })
-                      }
-                      aria-label={`${d.title} opacity`}
-                      className="mt-1 h-1 w-full accent-orange-400"
-                    />
+                    <div className="ml-10 mt-2.5">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-[9px] uppercase tracking-[0.14em] text-slate-500">
+                          Opacity
+                        </span>
+                        <span className="font-mono text-[10px] text-orange-200/90">
+                          {Math.round(state.opacity * 100)}%
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={Math.round(state.opacity * 100)}
+                        onChange={(e) =>
+                          onOverlayChange(d.id, { opacity: Number(e.target.value) / 100 })
+                        }
+                        aria-label={`${d.title} opacity`}
+                        className="h-1 w-full cursor-pointer accent-orange-300"
+                      />
+                    </div>
                   )}
                 </div>
               );
             })}
           </div>
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-[9px] leading-4 text-slate-600">
             Elevation and albedo tiles are opaque, so use the slider to blend them with the base.
           </p>
         </section>
 
         <section>
-          <h4 className={sectionTitle}>Places</h4>
-          <ul className="max-h-40 space-y-0.5 overflow-y-auto">
-            {places.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => onSelectPlace(p.id)}
-                  className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
-                    selectedPlace?.id === p.id ? "bg-white/10" : ""
-                  }`}
-                >
-                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${MARKER_STYLES[p.kind].dot}`} />
-                  <span className="truncate">{p.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="font-mono text-[10px] text-orange-300/80">03</span>
+            <h4 className={sectionTitle}>Named places</h4>
+            <span className="ml-auto font-mono text-[10px] text-slate-500">
+              {places.length.toString().padStart(2, "0")} PTS
+            </span>
+          </div>
+          {places.length > 0 ? (
+            <ul className="max-h-36 space-y-0.5 overflow-y-auto border-y border-white/[0.06] py-1">
+              {places.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => onSelectPlace(p.id)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 ${
+                      selectedPlace?.id === p.id
+                        ? "bg-orange-300/[0.08] text-white"
+                        : "text-slate-400 hover:bg-white/[0.035] hover:text-slate-100"
+                    }`}
+                  >
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ring-4 ring-white/[0.04] ${MARKER_STYLES[p.kind].dot}`}
+                    />
+                    <span className="truncate text-xs">{p.name}</span>
+                    <span className="ml-auto font-mono text-[9px] text-slate-600">›</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="border-y border-dashed border-white/[0.08] px-3 py-4 text-center">
+              <p className="text-xs text-slate-400">No saved places in this view</p>
+              <p className="mt-1 text-[10px] text-slate-600">
+                Drop a marker to keep a point of interest.
+              </p>
+            </div>
+          )}
 
           {selectedPlace && (
-            <div className="mt-2 rounded-md bg-white/5 p-2 ring-1 ring-white/10">
-              <p className="font-semibold">{selectedPlace.name}</p>
-              <p className="text-xs text-slate-400">
-                {MARKER_STYLES[selectedPlace.kind].label} ·{" "}
-                {formatLonLat(selectedPlace.lon, selectedPlace.lat)}
+            <div className="relative mt-2 overflow-hidden rounded-xl border border-orange-300/15 bg-[#151617] p-3">
+              <span className="absolute bottom-0 left-0 top-0 w-0.5 bg-orange-300/70" />
+              <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-orange-200/70">
+                Selected location
+              </p>
+              <p className="mt-1.5 text-sm font-semibold text-white">{selectedPlace.name}</p>
+              <p className="mt-1 text-[10px] text-slate-400">
+                  {MARKER_STYLES[selectedPlace.kind].label} ·{" "}
+                  {formatLonLat(selectedPlace.lon, selectedPlace.lat)}
               </p>
               {selectedPlace.description && (
-                <p className="mt-1 text-xs text-slate-300">{selectedPlace.description}</p>
+                <p className="mt-2 text-xs leading-5 text-slate-300/75">
+                  {selectedPlace.description}
+                </p>
               )}
               {selectedPlace.userAdded && (
                 <button
                   type="button"
                   onClick={() => onRemovePlace(selectedPlace.id)}
-                  className="mt-2 rounded bg-red-600/80 px-2 py-1 text-xs font-semibold hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                  className="mt-2 text-[10px] font-medium text-red-300/80 underline decoration-red-300/30 underline-offset-2 transition hover:text-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                 >
                   Remove marker
                 </button>
@@ -166,37 +341,45 @@ export default function MapSidePanel(props: MapSidePanelProps) {
           )}
         </section>
 
-        <section>
-          <div className="mb-1.5 flex items-center justify-between">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Routes</h4>
+        <section className="pb-1">
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="font-mono text-[10px] text-orange-300/80">04</span>
+            <h4 className={sectionTitle}>Measured routes</h4>
             {routes.length > 0 && (
               <button
                 type="button"
                 onClick={onClearRoutes}
-                className="text-xs text-slate-300 underline hover:text-white"
+                className="ml-auto rounded-md px-2 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-slate-500 transition hover:bg-white/[0.05] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
               >
                 Clear all
               </button>
             )}
           </div>
           {routes.length === 0 ? (
-            <p className="text-xs text-slate-500">Use the route tool (✏️) to measure a path.</p>
+            <div className="border-y border-dashed border-white/[0.08] px-3 py-4 text-center">
+              <p className="text-xs text-slate-400">No routes measured</p>
+              <p className="mt-1 text-[10px] text-slate-600">
+                Choose the route tool to trace a path.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-1">
+            <ul className="divide-y divide-white/[0.06] border-y border-white/[0.06]">
               {routes.map((r) => (
                 <li
                   key={r.id}
-                  className="flex items-center justify-between rounded bg-white/5 px-2 py-1"
+                  className="flex items-center justify-between gap-2 py-2"
                 >
-                  <span>
-                    {r.name}
-                    <span className="ml-2 text-xs text-orange-300">{formatKm(r.km)}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-medium text-slate-200">{r.name}</span>
+                    <span className="mt-0.5 block font-mono text-[10px] text-orange-200/80">
+                      DISTANCE / {formatKm(r.km)}
+                    </span>
                   </span>
                   <button
                     type="button"
                     onClick={() => onRemoveRoute(r.id)}
                     aria-label={`Delete ${r.name}`}
-                    className="rounded px-1.5 text-slate-300 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition hover:bg-red-400/10 hover:text-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
                   >
                     ×
                   </button>
