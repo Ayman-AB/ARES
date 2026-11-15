@@ -55,6 +55,7 @@ export function createMarsRegionLayer(region: MarsRegion) {
   );
   return new VectorLayer({
     source: new VectorSource({ features }),
+    properties: { id: "region-boundary" },
     style: new Style({
       fill: new Fill({ color: "rgba(251,146,60,0.12)" }),
       stroke: new Stroke({ color: "#fb923c", width: 2 }),
@@ -125,6 +126,7 @@ export function routeToFeature(route: RouteInfo) {
 export function createMarsGeologyLayer(features: Feature[]) {
   return new VectorLayer({
     source: new VectorSource({ features }),
+    properties: { id: "jezero-geology" },
 
     style: (feature) => {
       const color = getMarsGeologyColor(feature as Feature);
@@ -141,7 +143,7 @@ export function createMarsGeologyLayer(features: Feature[]) {
     },
 
     zIndex: 15,
-    visible: true,
+    visible: false,
   });
 }
 

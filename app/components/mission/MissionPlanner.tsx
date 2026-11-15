@@ -35,6 +35,7 @@ import { MISSION_PROFILES, analyzeRoute } from "../../lib/mission-sim";
 import LayerSwitcher from "../map/LayerSwitcher";
 import MapComponent from "../map/MapComponent";
 import MapLegend, { type MapLegendGroup } from "../map/MapLegend";
+import { focusLayerCoverage } from "../map/focusLayerCoverage";
 import { useMarsLayers } from "../map/useMarsLayers";
 import MissionDashboard from "./MissionDashboard";
 import { MissionEditor, MissionLibrary, type PlannerTool } from "./MissionEditor";
@@ -120,6 +121,7 @@ function downloadGeoJSON(mission: Mission, path: LonLat[], summary: Record<strin
 export default function MissionPlanner() {
   const layerControls = useMarsLayers("ctx-mosaic");
   const { tileLayers, tileError } = layerControls;
+  const { setOverlay } = layerControls;
   const [map, setMap] = useState<OLMap | null>(null);
   const [vec, setVec] = useState<VectorLayers | null>(null);
 
@@ -218,6 +220,13 @@ export default function MissionPlanner() {
       view.animate({ center: at, zoom: Math.max(view.getZoom() ?? 0, minZoom), duration: 550 });
     },
     [map],
+  );
+  const changeOverlay = useCallback(
+    (id: string, patch: Parameters<typeof setOverlay>[1]) => {
+      setOverlay(id, patch);
+      if (patch.visible) focusLayerCoverage(map, id);
+    },
+    [map, setOverlay],
   );
 
   // Frame the whole route whenever a different mission is opened.
@@ -734,7 +743,7 @@ export default function MissionPlanner() {
                 baseOpacity={layerControls.baseOpacity}
                 onBaseOpacityChange={layerControls.setBaseOpacity}
                 overlayState={layerControls.overlayState}
-                onOverlayChange={layerControls.setOverlay}
+                onOverlayChange={changeOverlay}
               />
               <section>
                 <div className="mb-2.5 flex items-center gap-2.5">

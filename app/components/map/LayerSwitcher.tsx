@@ -12,6 +12,14 @@ export interface LayerSwitcherProps {
   onBaseOpacityChange: (opacity: number) => void;
   overlayState: OverlayState;
   onOverlayChange: (id: string, patch: Partial<OverlayState[string]>) => void;
+  regionBoundaryVisible?: boolean;
+  onRegionBoundaryChange?: (visible: boolean) => void;
+  jezeroGeologyVisible?: boolean;
+  onJezeroGeologyChange?: (visible: boolean) => void;
+  placesVisible?: boolean;
+  onPlacesVisibilityChange?: (visible: boolean) => void;
+  routesVisible?: boolean;
+  onRoutesVisibilityChange?: (visible: boolean) => void;
 }
 
 const sectionTitle = "text-xs font-semibold tracking-wide text-slate-100";
@@ -60,6 +68,14 @@ export default function LayerSwitcher({
   onBaseOpacityChange,
   overlayState,
   onOverlayChange,
+  regionBoundaryVisible,
+  onRegionBoundaryChange,
+  jezeroGeologyVisible,
+  onJezeroGeologyChange,
+  placesVisible,
+  onPlacesVisibilityChange,
+  routesVisible,
+  onRoutesVisibilityChange,
 }: LayerSwitcherProps) {
   const groupId = useId();
   return (
@@ -228,9 +244,101 @@ export default function LayerSwitcher({
         <p className="mt-2 text-[9px] leading-4 text-slate-600">
           Tags summarize data type, scale, coverage, and source—not a shared numeric legend. Tile
           colors retain source symbology. MOLA elevation is an opaque grayscale overlay; CTX and
-          HiRISE cover mapped areas around Jezero only.
+          HiRISE cover Jezero only and focus the map at their deepest available tile level when enabled.
         </p>
       </section>
+
+      {(onRegionBoundaryChange ||
+        onJezeroGeologyChange ||
+        onPlacesVisibilityChange ||
+        onRoutesVisibilityChange) && (
+        <section>
+          <div className="mb-2.5 flex items-center gap-2.5">
+            <span className="font-mono text-[10px] text-orange-300/80">03</span>
+            <h4 className={sectionTitle}>Map features</h4>
+            <span className="ml-auto text-[9px] uppercase tracking-[0.14em] text-slate-600">
+              Vector
+            </span>
+          </div>
+          <div className="divide-y divide-white/[0.06] border-y border-white/[0.06]">
+            {onRegionBoundaryChange && (
+              <label className="flex cursor-pointer items-center gap-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={regionBoundaryVisible ?? false}
+                  onChange={(event) => onRegionBoundaryChange(event.target.checked)}
+                  className="h-4 w-4 accent-orange-400"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-200">
+                    Region boundary
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    Orange outline and shaded area
+                  </span>
+                </span>
+              </label>
+            )}
+            {onJezeroGeologyChange && (
+              <label className="flex cursor-pointer items-center gap-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={jezeroGeologyVisible ?? false}
+                  onChange={(event) => onJezeroGeologyChange(event.target.checked)}
+                  className="h-4 w-4 accent-teal-400"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-200">
+                    Jezero mapped geology
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    Colored geologic units · Jezero only
+                  </span>
+                </span>
+              </label>
+            )}
+            {onPlacesVisibilityChange && (
+              <label className="flex cursor-pointer items-center gap-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={placesVisible ?? false}
+                  onChange={(event) => onPlacesVisibilityChange(event.target.checked)}
+                  className="h-4 w-4 accent-sky-400"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-200">
+                    Place markers
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    Named sites and saved points
+                  </span>
+                </span>
+              </label>
+            )}
+            {onRoutesVisibilityChange && (
+              <label className="flex cursor-pointer items-center gap-3 py-2.5">
+                <input
+                  type="checkbox"
+                  checked={routesVisible ?? false}
+                  onChange={(event) => onRoutesVisibilityChange(event.target.checked)}
+                  className="h-4 w-4 accent-emerald-400"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-medium text-slate-200">
+                    Route lines
+                  </span>
+                  <span className="mt-0.5 block text-[10px] text-slate-500">
+                    Measured and planned itineraries
+                  </span>
+                </span>
+              </label>
+            )}
+          </div>
+          <p className="mt-2 text-[9px] leading-4 text-slate-600">
+            These controls hide map features independently; the selected surface imagery remains visible.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

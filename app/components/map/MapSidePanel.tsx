@@ -24,6 +24,14 @@ export interface MapSidePanelProps {
     id: string,
     patch: Partial<OverlayState[string]>,
   ) => void;
+  regionBoundaryVisible: boolean;
+  onRegionBoundaryChange: (visible: boolean) => void;
+  jezeroGeologyVisible: boolean;
+  onJezeroGeologyChange: (visible: boolean) => void;
+  placesVisible: boolean;
+  onPlacesVisibilityChange: (visible: boolean) => void;
+  routesVisible: boolean;
+  onRoutesVisibilityChange: (visible: boolean) => void;
   places: MarsPlace[];
   selectedPlace: MarsPlace | null;
   onSelectPlace: (id: string) => void;
@@ -53,6 +61,10 @@ export default function MapSidePanel(props: MapSidePanelProps) {
 
   const {
     open, onOpenChange, baseId, onBaseChange, baseOpacity, onBaseOpacityChange, overlayState, onOverlayChange,
+    regionBoundaryVisible, onRegionBoundaryChange,
+    jezeroGeologyVisible, onJezeroGeologyChange,
+    placesVisible, onPlacesVisibilityChange,
+    routesVisible, onRoutesVisibilityChange,
     places, selectedPlace, onSelectPlace, onRemovePlace, routes, onRemoveRoute, onClearRoutes,
     startPlaceId, destinationPlaceIds, onStartPlaceChange,
     onDestinationPlaceIdsChange, directRoute, alternativeRoutes, shortestRoute,
@@ -280,6 +292,14 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             onBaseOpacityChange={onBaseOpacityChange}
             overlayState={overlayState}
             onOverlayChange={onOverlayChange}
+            regionBoundaryVisible={regionBoundaryVisible}
+            onRegionBoundaryChange={onRegionBoundaryChange}
+            jezeroGeologyVisible={jezeroGeologyVisible}
+            onJezeroGeologyChange={onJezeroGeologyChange}
+            placesVisible={placesVisible}
+            onPlacesVisibilityChange={onPlacesVisibilityChange}
+            routesVisible={routesVisible}
+            onRoutesVisibilityChange={onRoutesVisibilityChange}
           />
 
           <section>

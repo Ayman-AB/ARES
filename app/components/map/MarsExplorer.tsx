@@ -11,7 +11,7 @@ import { containsCoordinate } from "ol/extent";
 import { unByKey } from "ol/Observable";
 
 import { MARS_EXTENT } from "../../config/mars-map";
-import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
+import { MARS_PLACES, MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { isMarsLocationInRegion, type MarsRegion } from "../../data/mars-regions";
 import { fetchMarsGeologyFeatures } from "../../data/mars-geology";
 import {
@@ -25,6 +25,7 @@ import {
 import MapComponent from "./MapComponent";
 import MapSidePanel from "./MapSidePanel";
 import MapToolbar, { type MapMode } from "./MapToolbar";
+import { focusLayerCoverage } from "./focusLayerCoverage";
 import { useMarsLayers, type OverlayState } from "./useMarsLayers";
 import {
   createMarkerLayer,
@@ -97,6 +98,10 @@ export default function MarsExplorer({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [startPlaceId, setStartPlaceId] = useState<string | null>(null);
   const [destinationPlaceIds, setDestinationPlaceIds] = useState<string[]>([]);
+  const [jezeroGeologyVisible, setJezeroGeologyVisible] = useState(false);
+  const [regionBoundaryVisible, setRegionBoundaryVisible] = useState(true);
+  const [placesVisible, setPlacesVisible] = useState(true);
+  const [routesVisible, setRoutesVisible] = useState(true);
   const [geologyLoading, setGeologyLoading] = useState(true);
   const [geologyError, setGeologyError] = useState<string | null>(null);
   const [geologyLegendItems, setGeologyLegendItems] = useState<
@@ -181,6 +186,17 @@ export default function MarsExplorer({
       markerLayerRef.current = null;
     };
   }, [region, tileLayers]);
+
+  useEffect(() => {
+    for (const [id, visible] of [
+      ["region-boundary", regionBoundaryVisible],
+      ["jezero-geology", jezeroGeologyVisible],
+    ] as const) {
+      layers.find((layer) => layer.get("id") === id)?.setVisible(visible);
+    }
+    markerLayerRef.current?.setVisible(placesVisible);
+    routeLayerRef.current?.setVisible(routesVisible);
+  }, [jezeroGeologyVisible, layers, placesVisible, regionBoundaryVisible, routesVisible]);
 
   // Load the Jezero geology layer once the NASA tile layers are ready.
   useEffect(() => {
@@ -312,6 +328,7 @@ export default function MarsExplorer({
         );
 
         const n = ++counters.current.route;
+        setRoutesVisible(true);
 
         setRoutes((prev) => [
           ...prev,
@@ -372,6 +389,7 @@ export default function MarsExplorer({
         };
 
         setPlaces((prev) => [...prev, place]);
+        setPlacesVisible(true);
         setSelectedId(place.id);
 
         return;
@@ -446,21 +464,43 @@ export default function MarsExplorer({
 
   const changeOverlay = (id: string, patch: Partial<OverlayState[string]>) => {
     layerControls.setOverlay(id, patch);
+    if (patch.visible) focusLayerCoverage(map, id);
   };
 
   const hint = HINTS[mode];
 
   const selectedPlace =
     places.find((place) => place.id === selectedId) ?? null;
-  const routeLegendGroups = useMemo<MapLegendGroup[]>(() => {
+  const mapLegendGroups = useMemo<MapLegendGroup[]>(() => {
+    const groups: MapLegendGroup[] = [];
+    if (region && regionBoundaryVisible) {
+      groups.push({
+        title: "Region boundary",
+        description: "Orange outline and translucent region footprint.",
+        items: [{ label: region.title, color: "#fb923c", shape: "area" }],
+      });
+    }
+
+    if (placesVisible && places.length > 0) {
+      const markerKinds = [...new Set(places.map((place) => place.kind))];
+      groups.push({
+        title: "Place markers",
+        items: markerKinds.map((kind) => ({
+          label: MARKER_STYLES[kind].label,
+          color: MARKER_STYLES[kind].hex,
+          shape: "circle",
+        })),
+      });
+    }
+
     const items: MapLegendGroup["items"] = [];
-    if (routes.length > 0) {
+    if (routesVisible && routes.length > 0) {
       items.push({ label: "Measured route", color: "#fb923c", shape: "line" });
     }
-    if (directRoute) {
+    if (routesVisible && directRoute) {
       items.push({ label: "Current itinerary", color: "#22c55e", shape: "line" });
     }
-    if (alternativeRoutes.length > 0) {
+    if (routesVisible && alternativeRoutes.length > 0) {
       items.push({
         label: "Alternative itinerary",
         color: "#38bdf8",
@@ -468,17 +508,26 @@ export default function MarsExplorer({
         dashed: true,
       });
     }
-    return items.length > 0
-      ? [
-          {
-            title: "Routes",
-            description:
-              "Distance-only itineraries; terrain, obstacles, and safety are not assessed.",
-            items,
-          },
-        ]
-      : [];
-  }, [alternativeRoutes.length, directRoute, routes.length]);
+    if (items.length > 0) {
+      groups.push({
+        title: "Routes",
+        description:
+          "Distance-only itineraries; terrain, obstacles, and safety are not assessed.",
+        items,
+      });
+    }
+
+    return groups;
+  }, [
+    alternativeRoutes.length,
+    directRoute,
+    places,
+    placesVisible,
+    region,
+    regionBoundaryVisible,
+    routes.length,
+    routesVisible,
+  ]);
 
   // --------------------------------------------------
   // 12. Render the map
@@ -503,8 +552,8 @@ export default function MarsExplorer({
         geologyItems={geologyLegendItems}
         geologyLoading={geologyLoading}
         geologyError={geologyError}
-        showJezeroGeology
-        legendGroups={routeLegendGroups}
+        showJezeroGeology={jezeroGeologyVisible}
+        legendGroups={mapLegendGroups}
       />
 
       {hint && (
@@ -534,6 +583,14 @@ export default function MarsExplorer({
         onBaseOpacityChange={layerControls.setBaseOpacity}
         overlayState={layerControls.overlayState}
         onOverlayChange={changeOverlay}
+        regionBoundaryVisible={regionBoundaryVisible}
+        onRegionBoundaryChange={setRegionBoundaryVisible}
+        jezeroGeologyVisible={jezeroGeologyVisible}
+        onJezeroGeologyChange={setJezeroGeologyVisible}
+        placesVisible={placesVisible}
+        onPlacesVisibilityChange={setPlacesVisible}
+        routesVisible={routesVisible}
+        onRoutesVisibilityChange={setRoutesVisible}
         places={places}
         selectedPlace={selectedPlace}
         onSelectPlace={selectPlace}
