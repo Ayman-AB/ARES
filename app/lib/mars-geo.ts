@@ -56,3 +56,66 @@ export function formatLonLatArray([lon, lat]: LonLat, digits = 5): string {
 export function formatKm(km: number): string {
   return km >= 100 ? `${Math.round(km).toLocaleString()} km` : `${km.toFixed(1)} km`;
 }
+
+export interface AlternativeRoutePlace {
+  id: string;
+  name: string;
+  lon: number;
+  lat: number;
+}
+
+/**
+ * Generate up to three alternative routes by swapping
+ * pairs of destinations in the original itinerary.
+ */
+export function generateAlternativeRoutes(
+  start: AlternativeRoutePlace,
+  destinations: AlternativeRoutePlace[],
+  maxAlternatives = 3,
+): RouteInfo[] {
+  if (destinations.length < 2 || maxAlternatives <= 0) {
+    return [];
+  }
+
+  const candidates: RouteInfo[] = [];
+  const seen = new Set<string>();
+
+  for (let i = 0; i < destinations.length; i++) {
+    for (let j = i + 1; j < destinations.length; j++) {
+      const reordered = [...destinations];
+
+      // Exchange the positions of two destinations.
+      [reordered[i], reordered[j]] = [
+        reordered[j],
+        reordered[i],
+      ];
+
+      const orderKey = reordered.map((place) => place.id).join("|");
+
+      if (seen.has(orderKey)) continue;
+      seen.add(orderKey);
+
+      const coordinates: LonLat[] = [
+        [start.lon, start.lat],
+        ...reordered.map(
+          (place): LonLat => [place.lon, place.lat],
+        ),
+      ];
+
+      candidates.push({
+        id: `alternative-${orderKey}`,
+        name: "Alternative route",
+        coordinates,
+        km: pathLengthKm(coordinates),
+      });
+    }
+  }
+
+  return candidates
+    .sort((a, b) => a.km - b.km)
+    .slice(0, maxAlternatives)
+    .map((route, index) => ({
+      ...route,
+      name: `Alternative ${index + 1}`,
+    }));
+}

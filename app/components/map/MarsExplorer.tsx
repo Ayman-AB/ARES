@@ -14,7 +14,13 @@ import { MARS_EXTENT } from "../../config/mars-map";
 import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
 import { isMarsLocationInRegion, type MarsRegion } from "../../data/mars-regions";
 import { fetchMarsGeologyFeatures } from "../../data/mars-geology";
-import { lineStringLengthM, type LonLat, type RouteInfo } from "../../lib/mars-geo";
+import {
+  generateAlternativeRoutes,
+  lineStringLengthM,
+  pathLengthKm,
+  type LonLat,
+  type RouteInfo,
+} from "../../lib/mars-geo";
 
 import MapComponent from "./MapComponent";
 import MapSidePanel from "./MapSidePanel";
@@ -30,7 +36,7 @@ import {
   routeStyle,
   routeToFeature,
 } from "./marsVectorLayers";
-import MapLegend from "./MapLegend";
+import MapLegend, { type MapLegendGroup } from "./MapLegend";
 
 const NO_LAYERS: BaseLayer[] = [];
 
@@ -70,6 +76,8 @@ export default function MarsExplorer({
       typeof window !== "undefined" &&
       window.matchMedia("(min-width: 768px)").matches,
   );
+
+  // Filter the default scientific places according to the selected region.
   const visibleDefaultPlaces = useMemo(
     () =>
       region
@@ -79,14 +87,74 @@ export default function MarsExplorer({
         : MARS_PLACES,
     [region],
   );
-  const [places, setPlaces] = useState<MarsPlace[]>(() => visibleDefaultPlaces);
+
+  const [places, setPlaces] = useState<MarsPlace[]>(
+    () => visibleDefaultPlaces,
+  );
+
+  // Manually drawn routes only.
   const [routes, setRoutes] = useState<RouteInfo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [startPlaceId, setStartPlaceId] = useState<string | null>(null);
+  const [destinationPlaceIds, setDestinationPlaceIds] = useState<string[]>([]);
   const [geologyLoading, setGeologyLoading] = useState(true);
   const [geologyError, setGeologyError] = useState<string | null>(null);
   const [geologyLegendItems, setGeologyLegendItems] = useState<
     ReturnType<typeof getMarsGeologyLegendItems>
   >([]);
+
+  const startPlace = useMemo(
+    () => places.find((place) => place.id === startPlaceId) ?? null,
+    [places, startPlaceId],
+  );
+  const destinationPlaces = useMemo(
+    () =>
+      destinationPlaceIds
+        .map((id) => places.find((place) => place.id === id))
+        .filter((place): place is MarsPlace => place !== undefined),
+    [destinationPlaceIds, places],
+  );
+  const routeCoordinates = useMemo<LonLat[]>(
+    () =>
+      startPlace
+        ? [
+            [startPlace.lon, startPlace.lat],
+            ...destinationPlaces.map(
+              (place): LonLat => [place.lon, place.lat],
+            ),
+          ]
+        : [],
+    [destinationPlaces, startPlace],
+  );
+  const directRoute = useMemo<RouteInfo | null>(
+    () =>
+      startPlace && destinationPlaces.length > 0
+        ? {
+            id: "selected-multi-destination-route",
+            name: "Scientific destinations route",
+            coordinates: routeCoordinates,
+            km: pathLengthKm(routeCoordinates),
+          }
+        : null,
+    [destinationPlaces.length, routeCoordinates, startPlace],
+  );
+  const alternativeRoutes = useMemo(
+    () =>
+      startPlace && destinationPlaces.length >= 2
+        ? generateAlternativeRoutes(startPlace, destinationPlaces)
+        : [],
+    [destinationPlaces, startPlace],
+  );
+  const shortestRoute = useMemo(() => {
+    const candidates = directRoute
+      ? [directRoute, ...alternativeRoutes]
+      : [];
+    return candidates.reduce<RouteInfo | null>(
+      (shortest, candidate) =>
+        !shortest || candidate.km < shortest.km ? candidate : shortest,
+      null,
+    );
+  }, [alternativeRoutes, directRoute]);
   const markerLayerRef = useRef<MarkerLayerT | null>(null);
   const routeLayerRef = useRef<RouteLayerT | null>(null);
 
@@ -97,6 +165,7 @@ export default function MarsExplorer({
   useEffect(() => {
     if (tileLayers.length === 0) return;
     const regionLayer = region ? createMarsRegionLayer(region) : null;
+
     const routeLayer = createRouteLayer();
     const markerLayer = createMarkerLayer(() => selectedRef.current);
 
@@ -182,8 +251,14 @@ export default function MarsExplorer({
     if (!source) return;
 
     source.clear();
-    source.addFeatures(routes.map(routeToFeature));
-  }, [layers, routes]);
+    source.addFeatures(
+      [
+        ...routes,
+        ...(directRoute ? [directRoute] : []),
+        ...alternativeRoutes,
+      ].map(routeToFeature),
+    );
+  }, [alternativeRoutes, directRoute, layers, routes]);
 
   // --------------------------------------------------
   // 6. Marker selection highlight
@@ -225,6 +300,7 @@ export default function MarsExplorer({
       });
 
       draw = activeDraw;
+
       activeDraw.on("drawend", (e) => {
         const geometry = e.feature.getGeometry() as LineString;
         const raw = geometry.getCoordinates();
@@ -362,6 +438,10 @@ export default function MarsExplorer({
     setSelectedId((current) =>
       current === id ? null : current,
     );
+    setStartPlaceId((current) => (current === id ? null : current));
+    setDestinationPlaceIds((current) =>
+      current.filter((destinationId) => destinationId !== id),
+    );
   };
 
   const changeOverlay = (id: string, patch: Partial<OverlayState[string]>) => {
@@ -372,6 +452,33 @@ export default function MarsExplorer({
 
   const selectedPlace =
     places.find((place) => place.id === selectedId) ?? null;
+  const routeLegendGroups = useMemo<MapLegendGroup[]>(() => {
+    const items: MapLegendGroup["items"] = [];
+    if (routes.length > 0) {
+      items.push({ label: "Measured route", color: "#fb923c", shape: "line" });
+    }
+    if (directRoute) {
+      items.push({ label: "Current itinerary", color: "#22c55e", shape: "line" });
+    }
+    if (alternativeRoutes.length > 0) {
+      items.push({
+        label: "Alternative itinerary",
+        color: "#38bdf8",
+        shape: "line",
+        dashed: true,
+      });
+    }
+    return items.length > 0
+      ? [
+          {
+            title: "Routes",
+            description:
+              "Distance-only itineraries; terrain, obstacles, and safety are not assessed.",
+            items,
+          },
+        ]
+      : [];
+  }, [alternativeRoutes.length, directRoute, routes.length]);
 
   // --------------------------------------------------
   // 12. Render the map
@@ -397,6 +504,7 @@ export default function MarsExplorer({
         geologyLoading={geologyLoading}
         geologyError={geologyError}
         showJezeroGeology
+        legendGroups={routeLegendGroups}
       />
 
       {hint && (
@@ -437,6 +545,13 @@ export default function MarsExplorer({
           )
         }
         onClearRoutes={() => setRoutes([])}
+        startPlaceId={startPlaceId}
+        destinationPlaceIds={destinationPlaceIds}
+        onStartPlaceChange={setStartPlaceId}
+        onDestinationPlaceIdsChange={setDestinationPlaceIds}
+        directRoute={directRoute}
+        alternativeRoutes={alternativeRoutes}
+        shortestRoute={shortestRoute}
       />
     </MapComponent>
   );
