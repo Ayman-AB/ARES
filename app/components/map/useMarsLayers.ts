@@ -83,7 +83,24 @@ export function useMarsLayers(initialBaseId: string = MARS_DEFAULT_BASE_ID): Mar
 
   const setOverlay = useCallback(
     (id: string, patch: Partial<OverlayState[string]>) =>
-      setOverlayState((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } })),
+      setOverlayState((prev) => {
+        const next = { ...prev, [id]: { ...prev[id], ...patch } };
+        const mutuallyExclusiveLayer =
+          id === "ctx-jezero"
+            ? "hirise-jezero"
+            : id === "hirise-jezero"
+              ? "ctx-jezero"
+              : null;
+
+        if (patch.visible && mutuallyExclusiveLayer) {
+          next[mutuallyExclusiveLayer] = {
+            ...next[mutuallyExclusiveLayer],
+            visible: false,
+          };
+        }
+
+        return next;
+      }),
     [],
   );
 

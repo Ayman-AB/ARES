@@ -244,7 +244,8 @@ export default function LayerSwitcher({
         <p className="mt-2 text-[9px] leading-4 text-slate-600">
           Tags summarize data type, scale, coverage, and source—not a shared numeric legend. Tile
           colors retain source symbology. MOLA elevation is an opaque grayscale overlay; CTX and
-          HiRISE cover Jezero only and focus the map at their deepest available tile level when enabled.
+          HiRISE cover Jezero only; enabling one turns off the other and focuses the map on its
+          available coverage.
         </p>
       </section>
 
