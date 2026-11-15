@@ -90,3 +90,60 @@ export function routeToFeature(route: RouteInfo) {
   feature.setId(route.id);
   return feature;
 }
+
+/**
+ * Creates the geological units layer from real ArcGIS features.
+ * Each geological unit receives a consistent color.
+ */
+export function createMarsGeologyLayer(features: Feature[]) {
+  const geologyColors = [
+    "#e76f51",
+    "#e9c46a",
+    "#2a9d8f",
+    "#457b9d",
+    "#9b5de5",
+    "#f4a261",
+    "#8ab17d",
+    "#d65db1",
+  ];
+
+  // Generate a stable color from the geological unit identifier.
+  function getGeologyColor(feature: Feature): string {
+    const identifier = String(
+      feature.get("symbol") ??
+      feature.get("unit") ??
+      feature.getId() ??
+      "unknown"
+    );
+
+    let hash = 0;
+
+    for (let i = 0; i < identifier.length; i++) {
+      hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash) % geologyColors.length;
+    return geologyColors[index];
+  }
+
+  return new VectorLayer({
+    source: new VectorSource({ features }),
+
+    style: (feature) => {
+      const color = getGeologyColor(feature as Feature);
+
+      return new Style({
+        fill: new Fill({
+          color: `${color}55`,
+        }),
+        stroke: new Stroke({
+          color,
+          width: 1.5,
+        }),
+      });
+    },
+
+    zIndex: 15,
+    visible: true,
+  });
+}

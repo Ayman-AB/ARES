@@ -2,7 +2,10 @@ import { MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { formatKm, formatLonLat, type RouteInfo } from "../../lib/mars-geo";
 import MarsLocationGallery from "./MarsLocationGallery";
-
+import { useState } from "react";
+import {
+  GEOLOGICAL_FORMATIONS,
+} from "../../data/geologicalData";
 export type OverlayState = Record<string, { visible: boolean; opacity: number }>;
 
 export interface MapSidePanelProps {
@@ -28,7 +31,12 @@ export default function MapSidePanel(props: MapSidePanelProps) {
     open, onOpenChange, baseId, onBaseChange, overlayState, onOverlayChange,
     places, selectedPlace, onSelectPlace, onRemovePlace, routes, onRemoveRoute, onClearRoutes,
   } = props;
+    const [selectedFormationId, setSelectedFormationId] =
+  useState<string | null>(null);
 
+const selectedFormation = GEOLOGICAL_FORMATIONS.find(
+  (formation) => formation.id === selectedFormationId
+);
   if (!open) {
     return (
       <button
@@ -343,9 +351,212 @@ export default function MapSidePanel(props: MapSidePanelProps) {
           )}
         </section>
 
+        {/* 04 — Geological Explorer */}
+{/* 03 - Geological Explorer */}
+<section>
+  <div className="mb-2.5 flex items-center gap-2.5">
+    <span className="font-mono text-[10px] text-orange-300/80">
+      04
+    </span>
+    <h4 className={sectionTitle}>Geological Explorer</h4>
+    <span className="ml-auto text-[9px] uppercase tracking-[0.14em] text-slate-600">
+      Science
+    </span>
+  </div>
+
+  <p className="mb-3 text-[10px] leading-4 text-slate-500">
+    Explore the main geological formations identified in Jezero Crater.
+  </p>
+
+  {/* Geological formations list */}
+  <div className="space-y-2">
+    {GEOLOGICAL_FORMATIONS.map((formation) => (
+      <button
+        key={formation.id}
+        type="button"
+        onClick={() =>
+          setSelectedFormationId(
+            selectedFormationId === formation.id
+              ? null
+              : formation.id
+          )
+        }
+        aria-pressed={selectedFormationId === formation.id}
+        className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
+          selectedFormationId === formation.id
+            ? "border-orange-300/30 bg-orange-300/[0.07]"
+            : "border-white/[0.06] bg-white/[0.015] hover:border-white/15 hover:bg-white/[0.04]"
+        }`}
+      >
+        <span
+          className="h-9 w-1.5 shrink-0 rounded-full"
+          style={{ backgroundColor: formation.color }}
+        />
+
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-semibold text-slate-100">
+            {formation.name}
+          </span>
+          <span className="mt-1 block text-[10px] text-slate-500">
+            {formation.category}
+          </span>
+        </span>
+
+        <span className="text-xs text-orange-200">
+          {selectedFormationId === formation.id ? "−" : "+"}
+        </span>
+      </button>
+    ))}
+  </div>
+
+  {/* Selected geological formation details */}
+  {selectedFormation && (
+    <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.08] bg-[#111a24]">
+      <div className="border-b border-white/[0.07] p-3">
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{
+              backgroundColor: selectedFormation.color,
+            }}
+          />
+          <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-orange-200/70">
+            Geological formation
+          </span>
+        </div>
+
+        <h5 className="mt-2 text-sm font-semibold text-white">
+          {selectedFormation.name}
+        </h5>
+
+        <p className="mt-1 text-[10px] text-slate-400">
+          {selectedFormation.category}
+        </p>
+      </div>
+
+      <div className="space-y-3 p-3">
+        <div>
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Description
+          </p>
+          <p className="text-xs leading-5 text-slate-300">
+            {selectedFormation.description}
+          </p>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Composition
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedFormation.composition.map((mineral) => (
+              <span
+                key={mineral}
+                className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[10px] text-slate-300"
+              >
+                {mineral}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Geological characteristics
+          </p>
+          <ul className="space-y-1.5">
+            {selectedFormation.characteristics.map((item) => (
+              <li
+                key={item}
+                className="flex gap-2 text-[10px] leading-4 text-slate-300"
+              >
+                <span className="text-orange-300">•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Mapped units
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedFormation.mappedUnits.map((unit) => (
+              <span
+                key={unit}
+                className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[10px] text-slate-300"
+              >
+                {unit}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Instruments
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedFormation.instruments.map((instrument) => (
+              <span
+                key={instrument}
+                className="rounded-md border border-emerald-300/15 bg-emerald-300/[0.06] px-2 py-1 text-[10px] text-emerald-200/80"
+              >
+                {instrument}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Interpretation
+          </p>
+          <p className="text-[10px] leading-5 text-slate-300">
+            {selectedFormation.interpretationNote}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-orange-300/10 bg-orange-300/[0.04] p-2.5">
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-orange-200/70">
+            Scientific importance
+          </p>
+          <p className="text-[10px] leading-5 text-slate-300">
+            {selectedFormation.scientificImportance}
+          </p>
+        </div>
+
+        <div className="border-t border-white/[0.07] pt-3">
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+            Data origin
+          </p>
+          <p className="text-[10px] leading-4 text-slate-400">
+            {selectedFormation.dataOrigin}
+          </p>
+          <a
+            href={selectedFormation.source}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-medium text-orange-200 underline decoration-orange-200/30 underline-offset-4 hover:text-orange-100"
+          >
+            {selectedFormation.sourceName} ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {!selectedFormation && (
+    <p className="mt-3 rounded-lg border border-dashed border-white/[0.08] p-3 text-center text-[10px] text-slate-500">
+      Select a geological formation to explore its scientific information.
+    </p>
+  )}
+</section>
+
         <section className="pb-1">
           <div className="mb-2.5 flex items-center gap-2.5">
-            <span className="font-mono text-[10px] text-orange-300/80">04</span>
+            <span className="font-mono text-[10px] text-orange-300/80">05</span>
             <h4 className={sectionTitle}>Measured routes</h4>
             {routes.length > 0 && (
               <button
@@ -390,6 +601,7 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             </ul>
           )}
         </section>
+
       </div>
     </aside>
   );
