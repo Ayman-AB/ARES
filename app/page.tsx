@@ -2,9 +2,12 @@ import MapLoader from "./components/map/MapLoader";
 
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 py-6">
       {/* ...existing ARES content... */}
-      <section aria-labelledby="mars-map-heading" className="space-y-3">
+      <section
+        aria-labelledby="mars-map-heading"
+        className="flex min-h-0 flex-1 flex-col space-y-3"
+      >
         <div className="flex items-center justify-between gap-3">
           <h2 id="mars-map-heading" className="text-xl font-semibold">
             Explore Mars

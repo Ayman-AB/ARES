@@ -58,17 +58,17 @@ export default function MapSidePanel(props: MapSidePanelProps) {
   return (
     <aside
       aria-label="Map layers and places"
-      className="absolute right-3 top-3 z-20 flex max-h-[calc(100%-1.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d14]/95 text-sm text-slate-100 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
+      className="absolute right-3 top-3 z-20 flex h-[calc(100%-1.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d14]/95 text-sm text-slate-100 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
     >
-      <div className="relative overflow-hidden border-b border-white/[0.08] bg-[#101923] px-4 pb-4 pt-4">
+      <div className="relative overflow-hidden border-b border-white/[0.08] bg-[#101923] px-3 pb-3 pt-3">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -right-12 -top-20 h-44 w-44 rounded-full bg-orange-400/[0.09] blur-3xl"
         />
         <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-orange-300/20 bg-[#201b17] text-orange-200 shadow-inner shadow-orange-200/[0.04]">
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px]">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-orange-300/20 bg-[#201b17] text-orange-200 shadow-inner shadow-orange-200/[0.04]">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
                 <path
                   d="M12 3v18M3 12h18M5.64 5.64l12.72 12.72m0-12.72L5.64 18.36"
                   stroke="currentColor"
@@ -80,10 +80,10 @@ export default function MapSidePanel(props: MapSidePanelProps) {
               <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-[#101923] bg-emerald-300" />
             </span>
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-orange-200/65">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-orange-200/65">
                 ARES / MARS OPERATIONS
               </p>
-              <h3 className="mt-1 text-base font-semibold tracking-tight text-white">
+              <h3 className="mt-0.5 text-sm font-semibold tracking-tight text-white">
                 Map inspector
               </h3>
             </div>
@@ -97,42 +97,42 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             ×
           </button>
         </div>
-        <div className="relative mt-4 flex items-end justify-between gap-3 border-t border-white/[0.07] pt-3">
+        <div className="relative mt-3 flex items-end justify-between gap-3 border-t border-white/[0.07] pt-2">
           <div className="min-w-0">
-            <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-[8px] font-medium uppercase tracking-[0.14em] text-slate-500">
               Active imagery
             </p>
-            <p className="mt-1 truncate text-xs font-medium text-slate-200">
+            <p className="mt-0.5 truncate text-[11px] font-medium text-slate-200">
               {activeBase?.title ?? "No base layer selected"}
             </p>
           </div>
-          <span className="shrink-0 rounded-md border border-emerald-300/15 bg-emerald-300/[0.06] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-emerald-200/80">
+          <span className="shrink-0 rounded-md border border-emerald-300/15 bg-emerald-300/[0.06] px-1.5 py-1 text-[8px] font-semibold uppercase tracking-[0.1em] text-emerald-200/80">
             Mars surface
           </span>
         </div>
       </div>
 
-      <div className="flex items-center border-b border-white/[0.07] bg-black/10 px-4 py-2.5">
+      <div className="flex items-center border-b border-white/[0.07] bg-black/10 px-3 py-2">
         <div className="flex flex-1 items-center gap-2.5">
-          <span className="font-mono text-lg font-medium leading-none text-slate-100">
+          <span className="font-mono text-base font-medium leading-none text-slate-100">
             {places.length.toString().padStart(2, "0")}
           </span>
-          <span className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+          <span className="text-[8px] font-medium uppercase tracking-[0.16em] text-slate-500">
             Places
           </span>
         </div>
         <span className="h-5 w-px bg-white/[0.08]" />
         <div className="flex flex-1 items-center justify-end gap-2.5">
-          <span className="font-mono text-lg font-medium leading-none text-orange-200">
+          <span className="font-mono text-base font-medium leading-none text-orange-200">
             {routes.length.toString().padStart(2, "0")}
           </span>
-          <span className="text-[9px] font-medium uppercase tracking-[0.16em] text-slate-500">
+          <span className="text-[8px] font-medium uppercase tracking-[0.16em] text-slate-500">
             Routes
           </span>
         </div>
       </div>
 
-      <div className="min-h-0 space-y-5 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-3">
         <section>
           <div className="mb-2.5 flex items-center gap-2.5">
             <span className="font-mono text-[10px] text-orange-300/80">01</span>
@@ -270,7 +270,8 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             })}
           </div>
           <p className="mt-2 text-[9px] leading-4 text-slate-600">
-            Elevation and albedo tiles are opaque, so use the slider to blend them with the base.
+            MOLA elevation is an opaque grayscale overlay; lower its opacity to reveal the base
+            imagery. CTX and HiRISE focus on Jezero and show only their actual coverage.
           </p>
         </section>
 

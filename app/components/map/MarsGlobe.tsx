@@ -229,7 +229,7 @@ export default function MarsGlobe({
   }, [onRegionSelect]);
 
   return (
-    <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
+    <div className="relative min-h-[420px] w-full flex-1 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl">
       <div ref={containerRef} className="h-full w-full" aria-label="3D Mars globe" />
 
       {status === "loading" && (

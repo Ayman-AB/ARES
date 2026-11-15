@@ -102,9 +102,8 @@ export default function MarsExplorer({
       tileLayers[def.id] = createMarsTrekLayer(def, {
         visible: false,
         zIndex: i,
-        ...(def.role === "base"
-          ? { onTileError: () => setTileError(true), onTileLoad: () => setTileError(false) }
-          : {}),
+        onTileError: () => setTileError(true),
+        onTileLoad: () => setTileError(false),
       });
     });
     const regionLayer = region ? createMarsRegionLayer(region) : null;
@@ -270,6 +269,16 @@ export default function MarsExplorer({
     setSelectedId((cur) => (cur === id ? null : cur));
   };
 
+  const changeOverlay = (id: string, patch: Partial<OverlayState[string]>) => {
+    setOverlayState((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+    if (!patch.visible) return;
+
+    const focus = MARS_LAYER_DEFS.find((layer) => layer.id === id)?.focus;
+    if (focus) {
+      map?.getView().animate({ center: focus.center, zoom: focus.zoom, duration: 650 });
+    }
+  };
+
   const hint = HINTS[mode];
   const selectedPlace = places.find((p) => p.id === selectedId) ?? null;
 
@@ -317,9 +326,7 @@ export default function MarsExplorer({
         baseId={baseId}
         onBaseChange={setBaseId}
         overlayState={overlayState}
-        onOverlayChange={(id, patch) =>
-          setOverlayState((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }))
-        }
+        onOverlayChange={changeOverlay}
         places={places}
         selectedPlace={selectedPlace}
         onSelectPlace={selectPlace}

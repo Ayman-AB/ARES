@@ -20,11 +20,14 @@ addProjection(MARS_PROJECTION);
 
 /** Trek `default028mm` grid: 2x1 tiles at level 0, doubling each level. */
 const TILE_SIZE = 256;
-const LEVELS = 10; // matrices 0..9
+const LEVELS = 18; // matrices 0..17; supports Jezero HiRISE detail
 const LEVEL_0_RESOLUTION = 360 / (2 * TILE_SIZE); // deg/px
 
 /** Grid limited to `maxLevel`; deeper view zooms upscale the last level. */
-export function getMarsTileGrid(maxLevel: number = LEVELS - 1) {
+export function getMarsTileGrid(
+  maxLevel: number = LEVELS - 1,
+  extent?: [number, number, number, number],
+) {
   const count = Math.min(maxLevel, LEVELS - 1) + 1;
   return {
     origin: [-180, 90] as [number, number],
@@ -32,6 +35,7 @@ export function getMarsTileGrid(maxLevel: number = LEVELS - 1) {
     resolutions: Array.from({ length: count }, (_, z) => LEVEL_0_RESOLUTION / 2 ** z),
     matrixIds: Array.from({ length: count }, (_, z) => String(z)),
     sizes: Array.from({ length: count }, (_, z): [number, number] => [2 ** (z + 1), 2 ** z]),
+    ...(extent ? { extent } : {}),
   };
 }
 
@@ -129,6 +133,12 @@ export interface MarsLayerDef {
   extension: "jpg" | "png";
   /** Deepest tile matrix advertised by the WMTS service. */
   maxLevel: number;
+  /** Optional WMTS tile URL template for services outside the Mars Trek tile path. */
+  tileUrlTemplate?: string;
+  /** Optional product coverage extent in Mars longitude/latitude degrees. */
+  extent?: [number, number, number, number];
+  /** Map position to show when a regional imagery layer is activated. */
+  focus?: { center: [number, number]; zoom: number };
   role: "base" | "overlay";
   defaultOpacity: number;
 }
@@ -157,6 +167,18 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     defaultOpacity: 1,
   },
   {
+    id: "global-geology",
+    title: "Global geology",
+    subtitle: "Geologic units · global",
+    product: "SIM3292_Global_Geology",
+    extension: "png",
+    maxLevel: 11,
+    role: "overlay",
+    defaultOpacity: 0.6,
+    tileUrlTemplate:
+      "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer/WMTS/tile/1.0.0/SIM3292_Global_Geology/{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png",
+  },
+  {
     id: "mola-shade",
     title: "MOLA color hillshade",
     subtitle: "Relief, 463 m/px",
@@ -172,9 +194,9 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     subtitle: "Altimetry, 463 m/px",
     product: "Mars_MGS_MOLA_DEM_mosaic_global_463m_8",
     extension: "png",
-    maxLevel: 7,
+    maxLevel: 5,
     role: "overlay",
-    defaultOpacity: 0.6,
+    defaultOpacity: 0.3,
   },
   {
     id: "tes-albedo",
@@ -182,12 +204,37 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     subtitle: "Surface brightness, 7.4 km/px",
     product: "Mars_MGS_TES_Albedo_mosaic_global_7410m",
     extension: "png",
-    maxLevel: 3,
+    maxLevel: 1,
     role: "overlay",
     defaultOpacity: 0.5,
+  },
+  {
+    id: "ctx-jezero",
+    title: "CTX landing-site mosaic",
+    subtitle: "6 m/px · Jezero coverage only",
+    product: "JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0",
+    extension: "png",
+    maxLevel: 13,
+    extent: [77.1604655, 18.2110274, 77.6991776, 18.7211945],
+    focus: { center: [77.43, 18.466], zoom: 9 },
+    role: "overlay",
+    defaultOpacity: 0.9,
+  },
+  {
+    id: "hirise-jezero",
+    title: "HiRISE landing-site mosaic",
+    subtitle: "25 cm/px · Jezero coverage only",
+    product: "JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd",
+    extension: "png",
+    maxLevel: 17,
+    extent: [77.2229331, 18.3067994, 77.583964, 18.669315],
+    focus: { center: [77.43, 18.466], zoom: 11 },
+    role: "overlay",
+    defaultOpacity: 1,
   },
 ];
 
 export function marsTrekTileUrl(def: MarsLayerDef) {
+  if (def.tileUrlTemplate) return def.tileUrlTemplate;
   return `${MARS_TREK_WMTS.baseUrl}/${def.product}/1.0.0//{Style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.${def.extension}`;
 }

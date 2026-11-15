@@ -26,7 +26,7 @@ export function createMarsTrekLayer(def: MarsLayerDef, options: MarsTrekLayerOpt
     style: MARS_TREK_WMTS.style,
     matrixSet: MARS_TREK_WMTS.matrixSet,
     projection: MARS_PROJECTION,
-    tileGrid: new WMTSTileGrid(getMarsTileGrid(def.maxLevel)),
+    tileGrid: new WMTSTileGrid(getMarsTileGrid(def.maxLevel, def.extent)),
     wrapX: false,
   });
 
