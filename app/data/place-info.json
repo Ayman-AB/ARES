@@ -1,0 +1,60 @@
+{
+  "jezero-crater": {
+    "name": "Jezero Crater",
+    "about": "",
+    "geology": "",
+    "importance": ""
+  },
+  "gale-crater": {
+    "about": "Impact crater about 154 km wide. Curiosity landed here in August 2012. At its center stands Mount Sharp (Aeolis Mons), a layered mound about 5 km high.",
+    "geology": "Layered sedimentary rocks (mudstone and sandstone) deposited by water and wind over a long period.",
+    "importance": "Curiosity found that Gale once had conditions that could support microbial life, including liquid water and key chemical elements. The layers record how Mars changed over time."
+  },
+  "olympus-mons": {
+    "about": "The largest known volcano in the solar system, in the Tharsis region. It is about 600 km wide and roughly 22 km high, about two and a half times the height of Mount Everest.",
+    "geology": "Shield volcano built from many basaltic lava flows. It has a summit caldera and steep cliffs (scarps) around its base.",
+    "importance": "Shows how a planet without moving tectonic plates can build huge volcanoes. It is also a key reference for Mars volcanic history and a challenge for landing because of its altitude."
+  },
+  "arsia-mons": {
+    "about": "Southernmost of the three large Tharsis Montes volcanoes. It is about 270 km wide and around 20 km high, with a summit caldera over 100 km wide.",
+    "geology": "Basaltic shield volcano. Its flanks include lava tubes and cave-like openings (skylights).",
+    "importance": "Lava tubes could shelter future explorers from radiation and temperature swings, and may protect ancient traces of life."
+  },
+  "elysium-mons": {
+    "about": "Large volcano in the Elysium region, in the northern hemisphere, standing roughly 14 km above the Martian reference level.",
+    "geology": "Volcanic cone built by lava flows, with channels and flow features around it.",
+    "importance": "Marks a second major volcanic region besides Tharsis and is close to the InSight landing area."
+  },
+  "valles-marineris": {
+    "about": "Largest canyon system known in the solar system, about 4,000 km long, up to several hundred km wide and up to about 7 km deep, near the Martian equator.",
+    "geology": "Formed mainly by stretching and cracking of the crust linked to the growth of the Tharsis volcanic region, then shaped by landslides and erosion. Layered walls expose old rock.",
+    "importance": "Its walls reveal a deep record of Mars geology. Minerals formed with water make it an interesting target, and its length makes it a landmark for route planning."
+  },
+  "hellas-planitia": {
+    "about": "One of the largest impact basins on Mars, about 2,300 km across and roughly 7 km deep, in the southern hemisphere.",
+    "geology": "Huge impact basin filled with sediments and dust. It is among the lowest places on the planet.",
+    "importance": "Atmospheric pressure is highest at the lowest altitudes, so Hellas is studied for temperature, weather, and possible shelter from radiation."
+  },
+  "viking-2": {
+    "about": "NASA's Viking 2 lander touched down on 3 September 1976 in Utopia Planitia, in the northern plains, and operated until 1980.",
+    "geology": "Flat plain covered with rocks and fine soil. Viking 2 photographed frost on the ground in winter.",
+    "importance": "Part of the first mission to successfully operate on the surface of Mars for a long time. It sent the first long-term weather and surface images, and ran experiments to look for life."
+  },
+  "insight": {
+    "about": "NASA's InSight lander arrived on 26 November 2018 in Elysium Planitia, a flat plain near the equator, and operated until December 2022.",
+    "geology": "Smooth, sandy plain chosen for safe landing and stable conditions for instruments.",
+    "importance": "Its seismometer recorded hundreds of marsquakes, which allowed scientists to measure the thickness of the crust and the size of the Martian core."
+  },
+  "custom-1": {
+    "about": "THE FIRST SOURCE OF WATER",
+    "geology": "DEEP PLACE",
+    "importance": "poiumasdfgh",
+    "name": "oumaima's aymeb place"
+  },
+  "custom-2": {
+    "name": "ayas marker",
+    "about": "",
+    "geology": "",
+    "importance": ""
+  }
+}
