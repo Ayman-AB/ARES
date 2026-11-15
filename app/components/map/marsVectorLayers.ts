@@ -22,6 +22,22 @@ export const routeStyle = [
     }),
   }),
 ];
+// Style of the current route planner itinerary.
+const directRouteStyle = new Style({
+  stroke: new Stroke({
+    color: "#22c55e",
+    width: 4,
+  }),
+});
+
+// Style of suggested alternative itineraries.
+const alternativeRouteStyle = new Style({
+  stroke: new Stroke({
+    color: "#38bdf8",
+    width: 4,
+    lineDash: [10, 8],
+  }),
+});
 
 export function createRouteLayer() {
   return new VectorLayer({ source: new VectorSource(), style: routeStyle, zIndex: 20 });
@@ -86,7 +102,18 @@ export function placeToFeature(place: MarsPlace) {
 }
 
 export function routeToFeature(route: RouteInfo) {
-  const feature = new Feature({ geometry: new LineString(route.coordinates) });
+  const feature = new Feature({
+    geometry: new LineString(route.coordinates),
+  });
+
   feature.setId(route.id);
+
+  // Apply a different style depending on the route type.
+  if (route.id === "selected-multi-destination-route") {
+    feature.setStyle(directRouteStyle);
+  } else if (route.id.startsWith("alternative-")) {
+    feature.setStyle(alternativeRouteStyle);
+  }
+
   return feature;
 }
