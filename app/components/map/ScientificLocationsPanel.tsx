@@ -26,7 +26,11 @@ const input =
   "w-full rounded bg-slate-800 px-2 py-1 text-xs text-white ring-1 ring-white/10 focus:outline-none focus:ring-orange-400";
 const btn = "rounded px-2 py-1 text-xs font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400";
 
-export default function ScientificLocationsPanel() {
+export default function ScientificLocationsPanel({
+  expanded = false,
+}: {
+  expanded?: boolean;
+}) {
   const [items, setItems] = useState<ScientificLocation[]>(scientificLocations);
   const [loaded, setLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -143,7 +147,11 @@ export default function ScientificLocationsPanel() {
         </button>
       </div>
 
-      <ul className="max-h-40 space-y-0.5 overflow-y-auto">
+      <ul
+        className={`${
+          expanded ? "max-h-56" : "max-h-40"
+        } space-y-0.5 overflow-y-auto`}
+      >
         {items.map((l) => (
           <li key={l.id}>
             <button

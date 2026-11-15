@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARKER_STYLES, type MarsPlace } from "../../data/mars-features";
 import { formatKm, formatLonLat, type RouteInfo } from "../../lib/mars-geo";
@@ -32,6 +33,7 @@ export interface MapSidePanelProps {
 const sectionTitle = "text-xs font-semibold tracking-wide text-slate-100";
 
 export default function MapSidePanel(props: MapSidePanelProps) {
+  const [expanded, setExpanded] = useState(false);
   const { all: placeInfo } = usePlaceInfo();
   const nameOf = (p: MarsPlace) => placeInfo[p.id]?.name?.trim() || p.name;
 
@@ -65,8 +67,13 @@ export default function MapSidePanel(props: MapSidePanelProps) {
 
   return (
     <aside
+      id="map-inspector-panel"
       aria-label="Map layers and places"
-      className="absolute right-3 top-3 z-20 flex h-[calc(100%-1.5rem)] w-[min(22rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d14]/95 text-sm text-slate-100 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl"
+      className={`absolute right-3 top-3 z-20 flex h-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#080d14]/95 text-sm text-slate-100 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-2xl transition-[width] duration-300 ease-in-out ${
+        expanded
+          ? "w-[calc(100vw-1.5rem)] sm:w-[80vw]"
+          : "w-[min(22rem,calc(100vw-1.5rem))]"
+      }`}
     >
       <div className="relative overflow-hidden border-b border-white/[0.08] bg-[#101923] px-3 pb-3 pt-3">
         <div
@@ -92,18 +99,46 @@ export default function MapSidePanel(props: MapSidePanelProps) {
                 ARES / MARS OPERATIONS
               </p>
               <h3 className="mt-0.5 text-sm font-semibold tracking-tight text-white">
-                Map inspector
+                {expanded ? "Map workspace" : "Map inspector"}
               </h3>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => onOpenChange(false)}
-            aria-label="Close panel"
-            className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-black/10 text-lg leading-none text-slate-400 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
-          >
-            ×
-          </button>
+          <div className="relative flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              aria-label={expanded ? "Restore panel width" : "Expand panel"}
+              aria-expanded={expanded}
+              aria-controls="map-inspector-panel"
+              title={expanded ? "Restore panel width" : "Expand panel"}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-black/10 text-slate-400 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                <path
+                  d={
+                    expanded
+                      ? "M8 3v5H3m13-5v5h5M3 16h5v5m8-5h5v5"
+                      : "M8 3H5a2 2 0 0 0-2 2v3m13-5h3a2 2 0 0 1 2 2v3M3 16v3a2 2 0 0 0 2 2h3m8 0h3a2 2 0 0 0 2-2v-3"
+                  }
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setExpanded(false);
+                onOpenChange(false);
+              }}
+              aria-label="Close panel"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-black/10 text-lg leading-none text-slate-400 transition hover:border-white/15 hover:bg-white/[0.06] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+            >
+              ×
+            </button>
+          </div>
         </div>
         <div className="relative mt-3 flex items-end justify-between gap-3 border-t border-white/[0.07] pt-2">
           <div className="min-w-0">
@@ -140,17 +175,36 @@ export default function MapSidePanel(props: MapSidePanelProps) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-3">
-        <LayerSwitcher
-          baseId={baseId}
-          onBaseChange={onBaseChange}
-          baseOpacity={baseOpacity}
-          onBaseOpacityChange={onBaseOpacityChange}
-          overlayState={overlayState}
-          onOverlayChange={onOverlayChange}
-        />
+      <div
+        className={`min-h-0 flex-1 overflow-y-auto ${
+          expanded
+            ? "grid content-start grid-cols-1 gap-5 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-2 lg:gap-6"
+            : "flex flex-col px-3 py-3"
+        }`}
+      >
+        <div
+          className={`min-w-0 space-y-4 ${
+            expanded ? "rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4" : ""
+          }`}
+        >
+          {expanded && (
+            <div className="border-b border-white/[0.07] pb-3">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-orange-200/70">
+                Map context
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">Imagery and selected places</p>
+            </div>
+          )}
+          <LayerSwitcher
+            baseId={baseId}
+            onBaseChange={onBaseChange}
+            baseOpacity={baseOpacity}
+            onBaseOpacityChange={onBaseOpacityChange}
+            overlayState={overlayState}
+            onOverlayChange={onOverlayChange}
+          />
 
-        <section>
+          <section>
           <div className="mb-2.5 flex items-center gap-2.5">
             <span className="font-mono text-[10px] text-orange-300/80">03</span>
             <h4 className={sectionTitle}>Named places</h4>
@@ -159,7 +213,11 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             </span>
           </div>
           {places.length > 0 ? (
-            <ul className="max-h-36 space-y-0.5 overflow-y-auto border-y border-white/[0.06] py-1">
+            <ul
+              className={`${
+                expanded ? "max-h-64" : "max-h-36"
+              } space-y-0.5 overflow-y-auto border-y border-white/[0.06] py-1`}
+            >
               {places.map((p) => (
                 <li key={p.id}>
                   <button
@@ -224,12 +282,29 @@ export default function MapSidePanel(props: MapSidePanelProps) {
               )}
             </div>
           )}
-        </section>
+          </section>
+        </div>
 
-        {/* Scientific locations (Jezero): about, geology, importance, photos, modify/delete */}
-        <ScientificLocationsPanel />
+        <div
+          className={`min-w-0 space-y-4 ${
+            expanded
+              ? "rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4"
+              : "mt-4"
+          }`}
+        >
+          {expanded && (
+            <div className="border-b border-white/[0.07] pb-3">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-orange-200/70">
+                Research & operations
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Scientific details and measured routes
+              </p>
+            </div>
+          )}
+          <ScientificLocationsPanel expanded={expanded} />
 
-        <section className="pb-1">
+          <section className="pb-1">
           <div className="mb-2.5 flex items-center gap-2.5">
             <span className="font-mono text-[10px] text-orange-300/80">05</span>
             <h4 className={sectionTitle}>Measured routes</h4>
@@ -275,9 +350,12 @@ export default function MapSidePanel(props: MapSidePanelProps) {
               ))}
             </ul>
           )}
-        </section>
+          </section>
+        </div>
 
-        <SaveDataBar />
+        <div className={expanded ? "lg:col-span-2" : "mt-4"}>
+          <SaveDataBar />
+        </div>
       </div>
     </aside>
   );
