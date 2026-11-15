@@ -140,6 +140,12 @@ export interface MarsLayerDef {
   id: string;
   title: string;
   subtitle: string;
+  dataType: string;
+  resolution: string;
+  source: string;
+  legendDescription: string;
+  /** Optional ArcGIS legend endpoint for the layer's rendered symbology. */
+  legendUrl?: string;
   /** Trek product name (path segment of the WMTS URL). */
   product: string;
   extension: "jpg" | "png";
@@ -165,6 +171,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "ctx-mosaic",
     title: "CTX global mosaic",
     subtitle: "MRO Context Camera, ~5 m/px (Caltech Murray Lab)",
+    dataType: "Optical imagery",
+    resolution: "≈5 m/px",
+    source: "Caltech Murray Lab",
+    legendDescription:
+      "CTX camera imagery. Pixel brightness and texture show surface appearance, not elevation, mapped classes, or hazard ratings.",
     product: "CTX_beta01_uncontrolled_5m_Caltech",
     extension: "png",
     maxLevel: 13,
@@ -176,6 +187,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "viking-color",
     title: "Viking color mosaic",
     subtitle: "Global, 232 m/px",
+    dataType: "Visible color",
+    resolution: "232 m/px",
+    source: "NASA/JPL · USGS Astrogeology",
+    legendDescription:
+      "Visible-color image mosaic. Pixel colors show surface appearance in the imagery, not mapped geology or elevation.",
     product: "Mars_Viking_MDIM21_ClrMosaic_global_232m",
     extension: "jpg",
     maxLevel: 7,
@@ -186,6 +202,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "themis-ir-day",
     title: "THEMIS IR day mosaic",
     subtitle: "Thermal infrared, 100 m/px",
+    dataType: "Thermal infrared",
+    resolution: "100 m/px",
+    source: "NASA/JPL · THEMIS",
+    legendDescription:
+      "Daytime thermal-infrared mosaic. These rendered tiles do not include a calibrated temperature color scale.",
     product: "Mars_MO_THEMIS-IR-Day_mosaic_global_100m_v12_clon0_ly",
     extension: "png",
     maxLevel: 8,
@@ -196,6 +217,12 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "global-geology",
     title: "Global geology",
     subtitle: "Geologic units · global",
+    dataType: "Geologic units",
+    resolution: "Map scale varies",
+    source: "NASA Mars Trek · USGS",
+    legendDescription: "Use the map-service key below to identify the mapped geologic units.",
+    legendUrl:
+      "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer/legend?f=json",
     product: "SIM3292_Global_Geology",
     extension: "png",
     maxLevel: 11,
@@ -208,6 +235,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "mola-shade",
     title: "MOLA color hillshade",
     subtitle: "Relief, 463 m/px",
+    dataType: "Shaded relief",
+    resolution: "463 m/px",
+    source: "NASA MGS · MOLA",
+    legendDescription:
+      "Shaded relief emphasizes surface form. Its rendered shade is not a numeric elevation measurement.",
     product: "Mars_MGS_MOLA_ClrShade_merge_global_463m",
     extension: "jpg",
     maxLevel: 7,
@@ -218,6 +250,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "mola-dem",
     title: "MOLA elevation (grayscale)",
     subtitle: "Altimetry, 463 m/px",
+    dataType: "Elevation",
+    resolution: "463 m/px",
+    source: "NASA MGS · MOLA",
+    legendDescription:
+      "Grayscale altimetry image. The rendered tiles do not include a numeric color-to-elevation key.",
     product: "Mars_MGS_MOLA_DEM_mosaic_global_463m_8",
     extension: "png",
     maxLevel: 5,
@@ -228,6 +265,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "tes-albedo",
     title: "TES albedo",
     subtitle: "Surface brightness, 7.4 km/px",
+    dataType: "Albedo",
+    resolution: "7.4 km/px",
+    source: "NASA MGS · TES",
+    legendDescription:
+      "Albedo represents surface reflectivity. These rendered tiles do not include a numeric albedo color scale.",
     product: "Mars_MGS_TES_Albedo_mosaic_global_7410m",
     extension: "png",
     maxLevel: 1,
@@ -238,6 +280,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "ctx-jezero",
     title: "CTX landing-site mosaic",
     subtitle: "6 m/px · Jezero coverage only",
+    dataType: "Optical imagery",
+    resolution: "6 m/px",
+    source: "NASA/JPL · Mars Reconnaissance Orbiter",
+    legendDescription:
+      "CTX camera imagery. Pixel brightness and texture show surface appearance, not mapped classes or hazard ratings.",
     product: "JEZ_ctx_B_soc_008_orthoMosaic_6m_Eqc_latTs0_lon0",
     extension: "png",
     maxLevel: 13,
@@ -249,6 +296,11 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     id: "hirise-jezero",
     title: "HiRISE landing-site mosaic",
     subtitle: "25 cm/px · Jezero coverage only",
+    dataType: "Optical imagery",
+    resolution: "25 cm/px",
+    source: "NASA/JPL · HiRISE",
+    legendDescription:
+      "HiRISE camera imagery. Pixel brightness and texture show surface appearance, not mapped classes or hazard ratings.",
     product: "JEZ_hirise_soc_006_orthoMosaic_25cm_Eqc_latTs0_lon0_first_dd",
     extension: "png",
     maxLevel: 17,

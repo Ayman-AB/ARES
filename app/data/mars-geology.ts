@@ -10,7 +10,7 @@ import {
 } from "../config/mars-map";
 
 // Official ArcGIS Feature Service: Jezero geological map
-const GEOLOGY_SERVICE_URL =
+export const MARS_GEOLOGY_SERVICE_URL =
   "https://services.arcgis.com/v01gqwM5QqNysAAi/ArcGIS/rest/services/Jezero_FeatureServiceFromPro/FeatureServer/8";
 
 // Projection used by the geological service
@@ -59,7 +59,7 @@ export async function fetchMarsGeologyFeatures(): Promise<Feature[]> {
   });
 
   const response = await fetch(
-    `${GEOLOGY_SERVICE_URL}/query?${params.toString()}`,
+    `${MARS_GEOLOGY_SERVICE_URL}/query?${params.toString()}`,
     { cache: "no-store" },
   );
 

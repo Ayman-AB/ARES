@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-import { MARS_LAYER_DEFS } from "../../config/mars-map";
+import { MARS_LAYER_DEFS, type MarsLayerDef } from "../../config/mars-map";
 import type { OverlayState } from "./useMarsLayers";
 
 export interface LayerSwitcherProps {
@@ -17,6 +17,40 @@ export interface LayerSwitcherProps {
 const sectionTitle = "text-xs font-semibold tracking-wide text-slate-100";
 const baseDefs = MARS_LAYER_DEFS.filter((d) => d.role === "base");
 const overlayDefs = MARS_LAYER_DEFS.filter((d) => d.role === "overlay");
+
+function LayerFacts({ layer }: { layer: MarsLayerDef }) {
+  const typeTone = layer.dataType === "Geologic units"
+    ? "bg-teal-300"
+    : /thermal|albedo/i.test(layer.dataType)
+      ? "bg-violet-300"
+      : /elevation|relief/i.test(layer.dataType)
+        ? "bg-orange-300"
+        : "bg-sky-300";
+
+  return (
+    <>
+      <span className="mt-1.5 flex flex-wrap gap-1">
+        {[
+          { label: layer.dataType, tone: typeTone },
+          { label: layer.resolution, tone: "" },
+          {
+            label: layer.extent ? "Jezero footprint" : "Global coverage",
+            tone: layer.extent ? "bg-amber-300" : "bg-emerald-300",
+          },
+        ].map(({ label, tone }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-1 rounded border border-white/[0.07] bg-black/10 px-1.5 py-0.5 text-[8px] leading-3 text-slate-400"
+            >
+              {tone && <span aria-hidden="true" className={`h-1 w-1 rounded-full ${tone}`} />}
+              {label}
+            </span>
+          ))}
+      </span>
+      <span className="mt-1 block text-[9px] text-slate-600">Source · {layer.source}</span>
+    </>
+  );
+}
 
 /** Base-imagery radio group + overlay toggles with opacity blending. */
 export default function LayerSwitcher({
@@ -74,6 +108,7 @@ export default function LayerSwitcher({
                 <span className="mt-0.5 block text-[10px] leading-4 text-slate-500">
                   {d.subtitle}
                 </span>
+                <LayerFacts layer={d} />
               </span>
               {baseId === d.id && (
                 <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-orange-200/80">
@@ -134,6 +169,7 @@ export default function LayerSwitcher({
                     <span className="mt-0.5 block text-[10px] leading-4 text-slate-500">
                       {d.subtitle}
                     </span>
+                    <LayerFacts layer={d} />
                   </span>
                   <span className="relative h-5 w-9 shrink-0">
                     <input
@@ -190,9 +226,9 @@ export default function LayerSwitcher({
           })}
         </div>
         <p className="mt-2 text-[9px] leading-4 text-slate-600">
-          MOLA elevation is an opaque grayscale overlay; lower its opacity to reveal the base
-          imagery. CTX and HiRISE cover mapped areas around Jezero only; enabling them keeps your
-          current map view.
+          Tags summarize data type, scale, coverage, and source—not a shared numeric legend. Tile
+          colors retain source symbology. MOLA elevation is an opaque grayscale overlay; CTX and
+          HiRISE cover mapped areas around Jezero only.
         </p>
       </section>
     </div>

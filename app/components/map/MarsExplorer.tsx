@@ -25,10 +25,12 @@ import {
   createRouteLayer,
   createMarsRegionLayer,
   createMarsGeologyLayer,
+  getMarsGeologyLegendItems,
   placeToFeature,
   routeStyle,
   routeToFeature,
 } from "./marsVectorLayers";
+import MapLegend from "./MapLegend";
 
 const NO_LAYERS: BaseLayer[] = [];
 
@@ -82,6 +84,9 @@ export default function MarsExplorer({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [geologyLoading, setGeologyLoading] = useState(true);
   const [geologyError, setGeologyError] = useState<string | null>(null);
+  const [geologyLegendItems, setGeologyLegendItems] = useState<
+    ReturnType<typeof getMarsGeologyLegendItems>
+  >([]);
   const markerLayerRef = useRef<MarkerLayerT | null>(null);
   const routeLayerRef = useRef<RouteLayerT | null>(null);
 
@@ -125,6 +130,7 @@ export default function MarsExplorer({
           throw new Error("No geological formations were found.");
         }
 
+        setGeologyLegendItems(getMarsGeologyLegendItems(features));
         geologyLayer = createMarsGeologyLayer(features);
         setLayers((previous) =>
           previous.includes(geologyLayer!) ? previous : [...previous, geologyLayer!],
@@ -384,6 +390,14 @@ export default function MarsExplorer({
         onModeChange={setMode}
       />
 
+      <MapLegend
+        baseId={layerControls.baseId}
+        overlayState={layerControls.overlayState}
+        geologyItems={geologyLegendItems}
+        geologyLoading={geologyLoading}
+        geologyError={geologyError}
+      />
+
       {hint && (
         <div
           role="status"
@@ -399,26 +413,6 @@ export default function MarsExplorer({
           className="pointer-events-none absolute inset-x-0 top-3 z-10 mx-auto w-fit rounded-md bg-red-900/80 px-3 py-1 text-xs text-red-100 ring-1 ring-red-400/30"
         >
           Some Mars tiles failed to load
-        </div>
-      )}
-
-      {/* Geological data loading status */}
-      {geologyLoading && (
-        <div
-          role="status"
-          className="pointer-events-none absolute left-3 top-3 z-10 rounded-md bg-slate-900/85 px-3 py-2 text-xs text-white shadow"
-        >
-          Loading geological formations...
-        </div>
-      )}
-
-      {/* Geological data error */}
-      {geologyError && (
-        <div
-          role="alert"
-          className="absolute left-3 top-3 z-10 max-w-xs rounded-md bg-red-900/90 px-3 py-2 text-xs text-red-100 shadow"
-        >
-          Geological data error: {geologyError}
         </div>
       )}
 

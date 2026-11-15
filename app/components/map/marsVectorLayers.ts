@@ -96,41 +96,11 @@ export function routeToFeature(route: RouteInfo) {
  * Each geological unit receives a consistent color.
  */
 export function createMarsGeologyLayer(features: Feature[]) {
-  const geologyColors = [
-    "#e76f51",
-    "#e9c46a",
-    "#2a9d8f",
-    "#457b9d",
-    "#9b5de5",
-    "#f4a261",
-    "#8ab17d",
-    "#d65db1",
-  ];
-
-  // Generate a stable color from the geological unit identifier.
-  function getGeologyColor(feature: Feature): string {
-    const identifier = String(
-      feature.get("symbol") ??
-      feature.get("unit") ??
-      feature.getId() ??
-      "unknown"
-    );
-
-    let hash = 0;
-
-    for (let i = 0; i < identifier.length; i++) {
-      hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    const index = Math.abs(hash) % geologyColors.length;
-    return geologyColors[index];
-  }
-
   return new VectorLayer({
     source: new VectorSource({ features }),
 
     style: (feature) => {
-      const color = getGeologyColor(feature as Feature);
+      const color = getMarsGeologyColor(feature as Feature);
 
       return new Style({
         fill: new Fill({
@@ -145,5 +115,70 @@ export function createMarsGeologyLayer(features: Feature[]) {
 
     zIndex: 15,
     visible: true,
+  });
+}
+
+const GEOLOGY_COLORS = [
+  "#e76f51",
+  "#e9c46a",
+  "#2a9d8f",
+  "#457b9d",
+  "#9b5de5",
+  "#f4a261",
+  "#8ab17d",
+  "#d65db1",
+  "#577590",
+  "#43aa8b",
+  "#f94144",
+  "#f9c74f",
+  "#277da1",
+  "#90be6d",
+];
+
+export interface MarsGeologyLegendItem {
+  unit: string;
+  symbol: string;
+  name: string;
+  color: string;
+}
+
+export function getMarsGeologyColor(feature: Feature): string {
+  const unit = String(feature.get("unit") ?? "").trim();
+  const unitNumber = Number(unit);
+  if (unit !== "" && Number.isInteger(unitNumber) && unitNumber >= 0) {
+    return GEOLOGY_COLORS[unitNumber % GEOLOGY_COLORS.length];
+  }
+
+  const identifier = String(feature.get("symbol") ?? feature.getId() ?? "unknown");
+  let hash = 0;
+  for (let i = 0; i < identifier.length; i++) {
+    hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return GEOLOGY_COLORS[Math.abs(hash) % GEOLOGY_COLORS.length];
+}
+
+export function getMarsGeologyLegendItems(features: Feature[]): MarsGeologyLegendItem[] {
+  const items = new Map<string, MarsGeologyLegendItem>();
+
+  for (const feature of features) {
+    const unit = String(feature.get("unit") ?? "").trim();
+    const symbol = String(feature.get("symbol") ?? "").trim();
+    const name = String(feature.get("name") ?? "").trim();
+    const key = unit || symbol || String(feature.getId() ?? "");
+    if (!key || items.has(key)) continue;
+    items.set(key, {
+      unit,
+      symbol,
+      name,
+      color: getMarsGeologyColor(feature),
+    });
+  }
+
+  return Array.from(items.values()).sort((a, b) => {
+    const aUnit = Number(a.unit);
+    const bUnit = Number(b.unit);
+    return Number.isFinite(aUnit) && Number.isFinite(bUnit)
+      ? aUnit - bUnit
+      : a.unit.localeCompare(b.unit);
   });
 }

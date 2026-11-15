@@ -6,6 +6,7 @@ import {
   type ScientificLocation,
 } from "../../data/scientific-locations";
 import { GEOLOGICAL_FORMATIONS } from "../../data/geologicalData";
+import { MARS_GEOLOGY_SERVICE_URL } from "../../data/mars-geology";
 import {
   Dialog,
   DialogClose,
@@ -146,6 +147,24 @@ export default function ScientificLocationsPanel({
           + Add
         </button>
       </div>
+      <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-teal-300/10 bg-teal-300/[0.035] px-2.5 py-2">
+        <div className="min-w-0">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-teal-100/80">
+            Map evidence
+          </p>
+          <p className="mt-0.5 text-[10px] leading-4 text-slate-400">
+            Jezero geological unit polygons · ArcGIS feature service
+          </p>
+        </div>
+        <a
+          href={MARS_GEOLOGY_SERVICE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 text-[9px] font-medium text-teal-200 underline decoration-teal-200/30 underline-offset-2 hover:text-teal-100"
+        >
+          View source ↗
+        </a>
+      </div>
 
       <ul
         className={`${
@@ -180,10 +199,14 @@ export default function ScientificLocationsPanel({
           <p className="text-xs text-slate-300">{selected.about}</p>
           <p className="mt-2 text-xs font-semibold text-orange-300">Geology</p>
           <p className="text-xs text-slate-300">{selected.geology}</p>
-          <p className="mt-2 text-xs font-semibold text-orange-300">Scientific importance</p>
-          <p className="text-xs text-slate-300">
-            {researchDetails?.scientificImportance ?? selected.importance}
-          </p>
+          <div className="mt-3 rounded-xl border border-orange-300/10 bg-orange-300/[0.035] p-2.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-orange-200/80">
+              Scientific importance
+            </p>
+            <p className="mt-1 text-xs leading-5 text-slate-200">
+              {researchDetails?.scientificImportance ?? selected.importance}
+            </p>
+          </div>
           {researchDetails && selected.importance !== researchDetails.scientificImportance && (
             <p className="mt-2 text-xs text-slate-400">
               Site-specific note: {selected.importance}
@@ -218,17 +241,29 @@ export default function ScientificLocationsPanel({
 
           {researchDetails && (
             <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
-              <div className="flex items-center gap-2">
+              <div
+                className="relative overflow-hidden rounded-xl border border-white/[0.08] p-3"
+                style={{
+                  background: `linear-gradient(115deg, ${researchDetails.color}20, transparent 70%)`,
+                }}
+              >
                 <span
                   aria-hidden="true"
-                  className="h-2.5 w-2.5 rounded-full"
+                  className="absolute bottom-0 left-0 top-0 w-0.5"
                   style={{ backgroundColor: researchDetails.color }}
                 />
-                <div>
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-orange-200/70">
-                    Additional research details
-                  </p>
-                  <p className="text-[10px] text-slate-400">{researchDetails.category}</p>
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: researchDetails.color }}
+                  />
+                  <div>
+                    <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-orange-200/70">
+                      Formation profile
+                    </p>
+                    <p className="text-xs font-semibold text-slate-100">{researchDetails.category}</p>
+                  </div>
                 </div>
               </div>
 
@@ -236,14 +271,19 @@ export default function ScientificLocationsPanel({
 
               <div>
                 <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
-                  Composition
+                  Observed composition
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {researchDetails.composition.map((item) => (
                     <span
                       key={item}
-                      className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[10px] text-slate-300"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[10px] text-slate-200"
                     >
+                      <span
+                        aria-hidden="true"
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: researchDetails.color }}
+                      />
                       {item}
                     </span>
                   ))}
@@ -254,26 +294,48 @@ export default function ScientificLocationsPanel({
                 <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
                   Geological characteristics
                 </p>
-                <ul className="space-y-1">
-                  {researchDetails.characteristics.map((item) => (
-                    <li key={item} className="flex gap-2 text-[10px] leading-4 text-slate-300">
-                      <span className="text-orange-300">•</span>
-                      {item}
-                    </li>
+                <div className={`grid grid-cols-1 gap-1.5 ${expanded ? "sm:grid-cols-2" : ""}`}>
+                  {researchDetails.characteristics.map((item, index) => (
+                    <div
+                      key={item}
+                      className="flex items-start gap-2 border-l border-white/10 py-1 pl-2.5"
+                    >
+                      <span className="font-mono text-[9px] text-orange-200/60">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-[10px] leading-4 text-slate-300">{item}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
               <div>
                 <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
-                  Mapped units · instruments
+                  Mapped members
                 </p>
-                <p className="text-[10px] leading-4 text-slate-300">
-                  {researchDetails.mappedUnits.join(", ")}
+                <div className="flex flex-wrap gap-1">
+                  {researchDetails.mappedUnits.map((unit) => (
+                    <span
+                      key={unit}
+                      className="rounded border border-white/[0.08] px-1.5 py-1 text-[9px] leading-3 text-slate-300"
+                    >
+                      {unit}
+                    </span>
+                  ))}
+                </div>
+                <p className="mb-1 mt-2 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Rover instruments
                 </p>
-                <p className="mt-1 text-[10px] leading-4 text-slate-400">
-                  {researchDetails.instruments.join(", ")}
-                </p>
+                <div className="flex flex-wrap gap-1">
+                  {researchDetails.instruments.map((instrument) => (
+                    <span
+                      key={instrument}
+                      className="rounded-full bg-orange-300/10 px-2 py-1 text-[9px] font-medium text-orange-100/80"
+                    >
+                      {instrument}
+                    </span>
+                  ))}
+                </div>
               </div>
 
               <div>

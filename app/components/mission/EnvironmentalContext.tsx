@@ -79,6 +79,165 @@ function EnvironmentMetric({ label, value, detail }: { label: string; value: str
   );
 }
 
+function TemperatureTrend({ reports }: { reports: WeatherReport[] }) {
+  const readings = reports.flatMap((item, index) =>
+    item.minTempC === null || item.maxTempC === null
+      ? []
+      : [{ index, report: item, min: item.minTempC, max: item.maxTempC }],
+  );
+
+  if (readings.length === 0) {
+    return <p className="py-3 text-center text-[10px] text-slate-500">No recent temperature ranges reported.</p>;
+  }
+
+  const values = readings.flatMap((item) => [item.min, item.max]);
+  const dataMin = Math.min(...values);
+  const dataMax = Math.max(...values);
+  const padding = Math.max(5, (dataMax - dataMin) * 0.12);
+  const domainMin = Math.floor((dataMin - padding) / 10) * 10;
+  const domainMax = Math.ceil((dataMax + padding) / 10) * 10;
+  const plotTop = 10;
+  const plotBottom = 79;
+  const x = (index: number) =>
+    40 + (index / Math.max(1, reports.length - 1)) * 267;
+  const y = (value: number) =>
+    plotBottom - ((value - domainMin) / (domainMax - domainMin)) * (plotBottom - plotTop);
+  const ticks = [domainMax, (domainMin + domainMax) / 2, domainMin];
+
+  return (
+    <svg
+      viewBox="0 0 320 104"
+      role="img"
+      aria-labelledby="temperature-trend-title temperature-trend-description"
+      className="mt-1 block w-full"
+    >
+      <title id="temperature-trend-title">Recent reported temperature ranges</title>
+      <desc id="temperature-trend-description">
+        Minimum-to-maximum air temperature ranges for the latest {reports.length} reports, ordered by sol.
+      </desc>
+      {ticks.map((tick, index) => {
+        const tickY = plotTop + (index / 2) * (plotBottom - plotTop);
+        return (
+          <g key={tick}>
+            <line x1="36" x2="312" y1={tickY} y2={tickY} stroke="rgba(148,163,184,0.12)" />
+            <text x="31" y={tickY + 3} textAnchor="end" fill="#64748b" fontSize="8">
+              {Math.round(tick)}°
+            </text>
+          </g>
+        );
+      })}
+      {readings.map((item) => {
+        const top = y(item.max);
+        const bottom = y(item.min);
+        const isLatest = item.report.sol === reports[reports.length - 1]?.sol;
+        const width = Math.min(7, 235 / Math.max(1, reports.length));
+        return (
+          <g key={item.report.sol}>
+            <title>
+              Sol {item.report.sol}: {item.min.toFixed(1)}°C to {item.max.toFixed(1)}°C
+            </title>
+            <line
+              x1={x(item.index)}
+              x2={x(item.index)}
+              y1={top}
+              y2={Math.max(top + 2, bottom)}
+              stroke={isLatest ? "#fdba74" : "#38bdf8"}
+              strokeWidth={width}
+              strokeLinecap="round"
+              opacity={isLatest ? 1 : 0.72}
+            />
+          </g>
+        );
+      })}
+      <text x="40" y="98" fill="#64748b" fontSize="8">
+        Sol {reports[0]?.sol}
+      </text>
+      <text x="307" y="98" textAnchor="end" fill="#64748b" fontSize="8">
+        Sol {reports[reports.length - 1]?.sol}
+      </text>
+    </svg>
+  );
+}
+
+function PressureTrend({ reports }: { reports: WeatherReport[] }) {
+  const readings = reports.flatMap((item, index) =>
+    item.pressurePa === null ? [] : [{ index, report: item, value: item.pressurePa }],
+  );
+
+  if (readings.length === 0) {
+    return <p className="py-2 text-center text-[10px] text-slate-500">No recent pressure reports.</p>;
+  }
+
+  const values = readings.map((item) => item.value);
+  const dataMin = Math.min(...values);
+  const dataMax = Math.max(...values);
+  const padding = Math.max(1, (dataMax - dataMin) * 0.12);
+  const domainMin = dataMin - padding;
+  const domainMax = dataMax + padding;
+  const plotTop = 8;
+  const plotBottom = 43;
+  const x = (index: number) =>
+    40 + (index / Math.max(1, reports.length - 1)) * 267;
+  const y = (value: number) =>
+    plotBottom - ((value - domainMin) / (domainMax - domainMin)) * (plotBottom - plotTop);
+  const width = Math.min(7, 235 / Math.max(1, reports.length));
+
+  return (
+    <svg
+      viewBox="0 0 320 65"
+      role="img"
+      aria-labelledby="pressure-trend-title pressure-trend-description"
+      className="mt-1 block w-full"
+    >
+      <title id="pressure-trend-title">Recent reported surface pressure</title>
+      <desc id="pressure-trend-description">
+        Surface pressure values for the latest {reports.length} reports, ordered by sol.
+      </desc>
+      {[plotTop, (plotTop + plotBottom) / 2, plotBottom].map((tickY, index) => (
+        <line
+          key={tickY}
+          x1="36"
+          x2="312"
+          y1={tickY}
+          y2={tickY}
+          stroke={index === 2 ? "rgba(148,163,184,0.2)" : "rgba(148,163,184,0.1)"}
+        />
+      ))}
+      <text x="31" y="11" textAnchor="end" fill="#64748b" fontSize="7">
+        {Math.round(domainMax)}
+      </text>
+      <text x="31" y="46" textAnchor="end" fill="#64748b" fontSize="7">
+        {Math.round(domainMin)}
+      </text>
+      {readings.map((item) => {
+        const top = y(item.value);
+        const isLatest = item.report.sol === reports[reports.length - 1]?.sol;
+        return (
+          <g key={item.report.sol}>
+            <title>Sol {item.report.sol}: {item.value.toFixed(1)} Pa</title>
+            <line
+              x1={x(item.index)}
+              x2={x(item.index)}
+              y1={top}
+              y2={plotBottom}
+              stroke={isLatest ? "#fdba74" : "#2dd4bf"}
+              strokeWidth={width}
+              strokeLinecap="round"
+              opacity={isLatest ? 1 : 0.7}
+            />
+          </g>
+        );
+      })}
+      <text x="40" y="60" fill="#64748b" fontSize="8">
+        Sol {reports[0]?.sol}
+      </text>
+      <text x="307" y="60" textAnchor="end" fill="#64748b" fontSize="8">
+        Sol {reports[reports.length - 1]?.sol}
+      </text>
+    </svg>
+  );
+}
+
 export default function EnvironmentalContext() {
   const [reports, setReports] = useState<WeatherReport[] | null>(null);
   const [selectedSol, setSelectedSol] = useState("");
@@ -116,6 +275,7 @@ export default function EnvironmentalContext() {
 
   const latest = reports?.[reports.length - 1];
   const report = reports?.find((item) => item.sol === selectedSol) ?? latest;
+  const recentReports = reports?.slice(-12) ?? [];
 
   return (
     <section aria-labelledby="environment-h">
@@ -153,6 +313,32 @@ export default function EnvironmentalContext() {
         </div>
       ) : report ? (
         <>
+          <div className="mb-2.5 rounded-xl border border-white/[0.07] bg-white/[0.025] px-2.5 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-300">
+                Recent environmental trends
+              </p>
+              <span className="text-[8px] uppercase tracking-[0.1em] text-slate-500">
+                {recentReports.length} reports
+              </span>
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-[9px] text-slate-500">Air temperature · min–max °C</p>
+              <span className="flex items-center gap-1 text-[8px] text-slate-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-300" /> latest report
+              </span>
+            </div>
+            <TemperatureTrend reports={recentReports} />
+            <div className="mt-1 border-t border-white/[0.06] pt-2">
+              <p className="text-[9px] text-slate-500">Surface pressure · Pa</p>
+              <PressureTrend reports={recentReports} />
+            </div>
+            <p className="mt-1 text-[8px] leading-3 text-slate-600">
+              Shows the latest reports, independent of the selected observation below. Ordered by sol; spacing is
+              by report order, not elapsed time.
+            </p>
+          </div>
+
           <label htmlFor="environment-sol" className="mb-1.5 block text-[10px] text-slate-500">
             Observation
           </label>
