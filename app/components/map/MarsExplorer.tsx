@@ -9,21 +9,17 @@ import Draw from "ol/interaction/Draw";
 import { containsCoordinate, type Extent } from "ol/extent";
 import { unByKey } from "ol/Observable";
 
-import {
-  MARS_DEFAULT_BASE_ID,
-  MARS_EXTENT,
-  MARS_LAYER_DEFS,
-} from "../../config/mars-map";
+import { MARS_EXTENT, MARS_LAYER_DEFS } from "../../config/mars-map";
 import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
 import {
   isMarsLocationInRegion,
   type MarsRegion,
 } from "../../data/mars-regions";
-import { pathLengthKm, type LonLat, type RouteInfo } from "../../lib/mars-geo";
+import { lineStringLengthM, type LonLat, type RouteInfo } from "../../lib/mars-geo";
 import MapComponent from "./MapComponent";
-import MapSidePanel, { type OverlayState } from "./MapSidePanel";
+import MapSidePanel from "./MapSidePanel";
 import MapToolbar, { type MapMode } from "./MapToolbar";
-import { createMarsTrekLayer } from "./marsTrekLayer";
+import { useMarsLayers, type OverlayState } from "./useMarsLayers";
 import {
   createMarkerLayer,
   createMarsRegionLayer,
@@ -35,7 +31,6 @@ import {
 
 const NO_LAYERS: BaseLayer[] = [];
 
-type TileLayerT = ReturnType<typeof createMarsTrekLayer>;
 type MarkerLayerT = ReturnType<typeof createMarkerLayer>;
 type RouteLayerT = ReturnType<typeof createRouteLayer>;
 
@@ -63,18 +58,10 @@ export default function MarsExplorer({
   const [map, setMap] = useState<OLMap | null>(null);
   const [layers, setLayers] = useState<BaseLayer[]>(NO_LAYERS);
   const [mode, setMode] = useState<MapMode>("pan");
-  const [tileError, setTileError] = useState(false);
+  const layerControls = useMarsLayers();
+  const { tileLayers, tileError } = layerControls;
   const [panelOpen, setPanelOpen] = useState(
     () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches,
-  );
-  const [baseId, setBaseId] = useState(MARS_DEFAULT_BASE_ID);
-  const [overlayState, setOverlayState] = useState<OverlayState>(() =>
-    Object.fromEntries(
-      MARS_LAYER_DEFS.filter((d) => d.role === "overlay").map((d) => [
-        d.id,
-        { visible: false, opacity: d.defaultOpacity },
-      ]),
-    ),
   );
   const visibleDefaultPlaces = useMemo(
     () =>
@@ -89,62 +76,30 @@ export default function MarsExplorer({
   const [routes, setRoutes] = useState<RouteInfo[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const tileLayersRef = useRef<Record<string, TileLayerT>>({});
   const markerLayerRef = useRef<MarkerLayerT | null>(null);
   const routeLayerRef = useRef<RouteLayerT | null>(null);
   const selectedRef = useRef<string | null>(null);
   const counters = useRef({ marker: 0, route: 0 });
 
-  // Create all layers once (client only); dispose on unmount / Strict Mode remount
+  // Vector layers are owned here; NASA tile layers come from useMarsLayers.
   useEffect(() => {
-    const tileLayers: Record<string, TileLayerT> = {};
-    MARS_LAYER_DEFS.forEach((def, i) => {
-      tileLayers[def.id] = createMarsTrekLayer(def, {
-        visible: false,
-        zIndex: i,
-        onTileError: () => setTileError(true),
-        onTileLoad: () => setTileError(false),
-      });
-    });
+    if (tileLayers.length === 0) return;
     const regionLayer = region ? createMarsRegionLayer(region) : null;
     const routeLayer = createRouteLayer();
     const markerLayer = createMarkerLayer(() => selectedRef.current);
 
-    tileLayersRef.current = tileLayers;
     routeLayerRef.current = routeLayer;
     markerLayerRef.current = markerLayer;
-    setLayers([
-      ...Object.values(tileLayers),
-      ...(regionLayer ? [regionLayer] : []),
-      routeLayer,
-      markerLayer,
-    ]);
+    setLayers([...tileLayers, ...(regionLayer ? [regionLayer] : []), routeLayer, markerLayer]);
 
     return () => {
-      Object.values(tileLayers).forEach((l) => l.dispose());
       regionLayer?.dispose();
       routeLayer.dispose();
       markerLayer.dispose();
-      tileLayersRef.current = {};
       routeLayerRef.current = null;
       markerLayerRef.current = null;
     };
-  }, [region]);
-
-  // Layer visibility / opacity
-  useEffect(() => {
-    for (const def of MARS_LAYER_DEFS) {
-      const layer = tileLayersRef.current[def.id];
-      if (!layer) continue;
-      if (def.role === "base") {
-        layer.setVisible(def.id === baseId);
-      } else {
-        const s = overlayState[def.id];
-        layer.setVisible(s.visible);
-        layer.setOpacity(s.opacity);
-      }
-    }
-  }, [layers, baseId, overlayState]);
+  }, [region, tileLayers]);
 
   // Markers -> vector source
   useEffect(() => {
@@ -185,14 +140,15 @@ export default function MarsExplorer({
       const activeDraw = new Draw({ type: "LineString", style: routeStyle });
       draw = activeDraw;
       activeDraw.on("drawend", (e) => {
-        const raw = (e.feature.getGeometry() as LineString).getCoordinates();
+        const geometry = e.feature.getGeometry() as LineString;
+        const raw = geometry.getCoordinates();
         const coordinates = raw.map(
           ([lon, lat]): LonLat => [clamp(lon, -180, 180), clamp(lat, -90, 90)],
         );
         const n = ++counters.current.route;
         setRoutes((prev) => [
           ...prev,
-          { id: `route-${n}`, name: `Route ${n}`, coordinates, km: pathLengthKm(coordinates) },
+          { id: `route-${n}`, name: `Route ${n}`, coordinates, km: lineStringLengthM(geometry) / 1000 },
         ]);
       });
       map.addInteraction(activeDraw);
@@ -270,7 +226,7 @@ export default function MarsExplorer({
   };
 
   const changeOverlay = (id: string, patch: Partial<OverlayState[string]>) => {
-    setOverlayState((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+    layerControls.setOverlay(id, patch);
     if (!patch.visible) return;
 
     const focus = MARS_LAYER_DEFS.find((layer) => layer.id === id)?.focus;
@@ -323,9 +279,11 @@ export default function MarsExplorer({
       <MapSidePanel
         open={panelOpen}
         onOpenChange={setPanelOpen}
-        baseId={baseId}
-        onBaseChange={setBaseId}
-        overlayState={overlayState}
+        baseId={layerControls.baseId}
+        onBaseChange={layerControls.setBaseId}
+        baseOpacity={layerControls.baseOpacity}
+        onBaseOpacityChange={layerControls.setBaseOpacity}
+        overlayState={layerControls.overlayState}
         onOverlayChange={changeOverlay}
         places={places}
         selectedPlace={selectedPlace}

@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "copy-cesium": "node -e \"const fs = require('fs'); ['Workers','ThirdParty','Assets','Widgets'].forEach(d => fs.cpSync('node_modules/cesium/Build/Cesium/' + d, 'public/cesium/' + d, { recursive: true }));\"",
+    "dev": "npm run copy-cesium && next dev",
+    "build": "npm run copy-cesium && next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "cesium": "^1.147.0",
     "next": "16.4.6",
     "ol": "^10.11.0",
     "react": "19.3.0",
@@ -19,6 +21,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cpx2": "^9.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
