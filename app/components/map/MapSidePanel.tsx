@@ -181,6 +181,7 @@ export default function MapSidePanel(props: MapSidePanelProps) {
             ? "grid content-start grid-cols-1 gap-5 px-4 py-4 sm:px-5 sm:py-5 lg:grid-cols-2 lg:gap-6"
             : "flex flex-col px-3 py-3"
         }`}
+        style={{ overflowAnchor: "none" }}
       >
         <div
           className={`min-w-0 space-y-4 ${

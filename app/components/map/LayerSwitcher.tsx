@@ -119,12 +119,6 @@ export default function LayerSwitcher({
             return (
               <div key={d.id} className="py-2.5 first:pt-3 last:pb-3">
                 <label className="flex cursor-pointer items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={state.visible}
-                    onChange={(e) => onOverlayChange(d.id, { visible: e.target.checked })}
-                    className="peer sr-only"
-                  />
                   <span
                     aria-hidden="true"
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] transition ${
@@ -141,21 +135,30 @@ export default function LayerSwitcher({
                       {d.subtitle}
                     </span>
                   </span>
-                  <span
-                    aria-hidden="true"
-                    className={`relative h-5 w-9 shrink-0 rounded-full border transition peer-focus-visible:ring-2 peer-focus-visible:ring-orange-300/70 ${
-                      state.visible
-                        ? "border-orange-300/30 bg-orange-300/20"
-                        : "border-white/10 bg-white/[0.04]"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-3.5 w-3.5 rounded-full transition-all ${
-                        state.visible
-                          ? "left-[17px] bg-orange-200 shadow-[0_0_8px_rgba(253,186,116,0.5)]"
-                          : "left-0.5 bg-slate-500"
-                      }`}
+                  <span className="relative h-5 w-9 shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={state.visible}
+                      onChange={(e) => onOverlayChange(d.id, { visible: e.target.checked })}
+                      aria-label={`Show ${d.title} overlay`}
+                      className="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0"
                     />
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute inset-0 rounded-full border transition peer-focus-visible:ring-2 peer-focus-visible:ring-orange-300/70 ${
+                        state.visible
+                          ? "border-orange-300/30 bg-orange-300/20"
+                          : "border-white/10 bg-white/[0.04]"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 h-3.5 w-3.5 rounded-full transition-all ${
+                          state.visible
+                            ? "left-[17px] bg-orange-200 shadow-[0_0_8px_rgba(253,186,116,0.5)]"
+                            : "left-0.5 bg-slate-500"
+                        }`}
+                      />
+                    </span>
                   </span>
                 </label>
                 {state.visible && (
@@ -188,7 +191,8 @@ export default function LayerSwitcher({
         </div>
         <p className="mt-2 text-[9px] leading-4 text-slate-600">
           MOLA elevation is an opaque grayscale overlay; lower its opacity to reveal the base
-          imagery. CTX and HiRISE focus on Jezero and show only their actual coverage.
+          imagery. CTX and HiRISE cover mapped areas around Jezero only; enabling them keeps your
+          current map view.
         </p>
       </section>
     </div>

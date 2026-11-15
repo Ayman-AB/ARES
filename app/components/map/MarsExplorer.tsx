@@ -10,7 +10,7 @@ import Draw from "ol/interaction/Draw";
 import { containsCoordinate } from "ol/extent";
 import { unByKey } from "ol/Observable";
 
-import { MARS_EXTENT, MARS_LAYER_DEFS } from "../../config/mars-map";
+import { MARS_EXTENT } from "../../config/mars-map";
 import { MARS_PLACES, type MarsPlace } from "../../data/mars-features";
 import { isMarsLocationInRegion, type MarsRegion } from "../../data/mars-regions";
 import { fetchMarsGeologyFeatures } from "../../data/mars-geology";
@@ -360,12 +360,6 @@ export default function MarsExplorer({
 
   const changeOverlay = (id: string, patch: Partial<OverlayState[string]>) => {
     layerControls.setOverlay(id, patch);
-    if (!patch.visible) return;
-
-    const focus = MARS_LAYER_DEFS.find((layer) => layer.id === id)?.focus;
-    if (focus) {
-      map?.getView().animate({ center: focus.center, zoom: focus.zoom, duration: 650 });
-    }
   };
 
   const hint = HINTS[mode];

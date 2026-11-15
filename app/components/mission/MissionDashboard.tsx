@@ -8,6 +8,7 @@ import {
   type MissionProfile,
   type Severity,
 } from "../../lib/mission-sim";
+import EnvironmentalContext from "./EnvironmentalContext";
 import ElevationProfile from "./ElevationProfile";
 import { SEVERITY_HEX } from "./missionLayers";
 
@@ -75,14 +76,43 @@ export default function MissionDashboard({
 
   return (
     <div className="space-y-6">
+      {/* Terrain screening */}
+      <section
+        aria-labelledby="terrain-screening-h"
+        className="rounded-xl border border-amber-300/20 bg-amber-300/[0.045] p-3"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h4 id="terrain-screening-h" className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-100">
+            Terrain screening · model only
+          </h4>
+          <span className="shrink-0 rounded-full border border-amber-200/15 px-2 py-1 text-[9px] uppercase tracking-[0.12em] text-amber-100/70">
+            Not safety clearance
+          </span>
+        </div>
+        <p className="mt-2 text-[11px] leading-4 text-slate-300/80">
+          Slopes, elevation, and hazard flags use an analytic Jezero model—not measured route terrain. A green result
+          means only that model thresholds were not crossed; no DEM, surface-roughness survey, or obstacle detection
+          currently validates this route.
+        </p>
+        <p className="mt-2 border-t border-amber-200/10 pt-2 text-[10px] leading-4 text-slate-400">
+          Imagery is visual context only: global CTX ~5 m/px, Jezero CTX 6 m/px, and HiRISE 25 cm/px within its
+          limited coverage. Global MOLA elevation is 463 m/px—too coarse for foot-scale safety—and none of these
+          layers feed the route calculations.
+        </p>
+      </section>
+
       {/* Metrics */}
       <section aria-labelledby="metrics-h">
         <div className="mb-2.5 flex items-baseline justify-between">
           <h4 id="metrics-h" className={h4}>
-            Mission metrics
+            Traverse budget
           </h4>
-          <span className="text-[9px] uppercase tracking-[0.14em] text-slate-600">client-side sim</span>
+          <span className="text-[9px] uppercase tracking-[0.14em] text-slate-600">planning estimate</span>
         </div>
+        <p className="mb-2.5 text-[10px] leading-4 text-slate-500">
+          Distance, time, battery, and O₂ are calculated from editable EVA/rover assumptions—not validated vehicle
+          performance.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           <Metric
             label="Total distance"
@@ -110,7 +140,14 @@ export default function MissionDashboard({
                 {a.energyKWh.toFixed(2)} kWh · {Math.round(a.batteryPct)}%
               </p>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(a.batteryPct)} aria-label="Battery use">
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-white/[0.06]"
+              role="meter"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.min(100, Math.round(a.batteryPct))}
+              aria-label="Estimated battery use"
+            >
               <div
                 className="h-full rounded-full transition-[width] duration-300"
                 style={{
@@ -155,7 +192,7 @@ export default function MissionDashboard({
       <section aria-labelledby="warn-h">
         <div className="mb-2.5 flex items-baseline justify-between">
           <h4 id="warn-h" className={h4}>
-            Terrain &amp; resource alerts
+            Terrain &amp; resource screening
           </h4>
           <span className="font-mono text-[10px] text-slate-500">
             {a.warnings.filter((w) => w.severity === 2).length} no-go ·{" "}
@@ -168,7 +205,8 @@ export default function MissionDashboard({
           </p>
         ) : a.warnings.length === 0 ? (
           <p className="flex items-center gap-2 rounded-lg border border-emerald-300/15 bg-emerald-300/[0.05] px-3 py-2.5 text-xs text-emerald-100">
-            <SevDot s={0} /> Route is within all {profile.short} limits.
+            <SevDot s={0} />
+            No model or budget thresholds triggered. This is not a safety clearance.
           </p>
         ) : (
           <ul className="space-y-1.5">
@@ -194,6 +232,8 @@ export default function MissionDashboard({
           </ul>
         )}
       </section>
+
+      <EnvironmentalContext />
 
       {/* Elevation profile */}
       <section aria-labelledby="profile-h">

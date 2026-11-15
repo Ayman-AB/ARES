@@ -637,7 +637,11 @@ export default function MissionPlanner() {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div
+          key={tab}
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-4"
+          style={{ overflowAnchor: "none" }}
+        >
           {tab === "overview" && (
             <MissionDashboard
               mission={mission}

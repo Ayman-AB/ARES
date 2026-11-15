@@ -149,8 +149,6 @@ export interface MarsLayerDef {
   tileUrlTemplate?: string;
   /** Optional product coverage extent in Mars longitude/latitude degrees. */
   extent?: [number, number, number, number];
-  /** Map position to show when a regional imagery layer is activated. */
-  focus?: { center: [number, number]; zoom: number };
   role: "base" | "overlay";
   defaultOpacity: number;
   /**
@@ -244,7 +242,6 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     extension: "png",
     maxLevel: 13,
     extent: [77.1604655, 18.2110274, 77.6991776, 18.7211945],
-    focus: { center: [77.43, 18.466], zoom: 9 },
     role: "overlay",
     defaultOpacity: 0.9,
   },
@@ -256,7 +253,6 @@ export const MARS_LAYER_DEFS: MarsLayerDef[] = [
     extension: "png",
     maxLevel: 17,
     extent: [77.2229331, 18.3067994, 77.583964, 18.669315],
-    focus: { center: [77.43, 18.466], zoom: 11 },
     role: "overlay",
     defaultOpacity: 1,
   },
