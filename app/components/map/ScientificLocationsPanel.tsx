@@ -5,6 +5,7 @@ import {
   scientificLocations,
   type ScientificLocation,
 } from "../../data/scientific-locations";
+import { GEOLOGICAL_FORMATIONS } from "../../data/geologicalData";
 import {
   Dialog,
   DialogClose,
@@ -59,6 +60,9 @@ export default function ScientificLocationsPanel() {
 
   const selected = items.find((l) => l.id === selectedId) ?? null;
   const photo = selected?.photos[photoIndex];
+  const researchDetails = selected
+    ? GEOLOGICAL_FORMATIONS.find((formation) => formation.id === selected.id) ?? null
+    : null;
   const editing = draft ? items.some((l) => l.id === draft.id) : false;
 
   function select(id: string) {
@@ -169,7 +173,14 @@ export default function ScientificLocationsPanel() {
           <p className="mt-2 text-xs font-semibold text-orange-300">Geology</p>
           <p className="text-xs text-slate-300">{selected.geology}</p>
           <p className="mt-2 text-xs font-semibold text-orange-300">Scientific importance</p>
-          <p className="text-xs text-slate-300">{selected.importance}</p>
+          <p className="text-xs text-slate-300">
+            {researchDetails?.scientificImportance ?? selected.importance}
+          </p>
+          {researchDetails && selected.importance !== researchDetails.scientificImportance && (
+            <p className="mt-2 text-xs text-slate-400">
+              Site-specific note: {selected.importance}
+            </p>
+          )}
 
           {photo ? (
             <div className="mt-2">
@@ -195,6 +206,92 @@ export default function ScientificLocationsPanel() {
             </div>
           ) : (
             <p className="mt-2 text-xs text-slate-500">No photo yet for this location.</p>
+          )}
+
+          {researchDetails && (
+            <div className="mt-3 space-y-3 border-t border-white/10 pt-3">
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: researchDetails.color }}
+                />
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.15em] text-orange-200/70">
+                    Additional research details
+                  </p>
+                  <p className="text-[10px] text-slate-400">{researchDetails.category}</p>
+                </div>
+              </div>
+
+              <p className="text-xs leading-5 text-slate-300">{researchDetails.description}</p>
+
+              <div>
+                <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Composition
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {researchDetails.composition.map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[10px] text-slate-300"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Geological characteristics
+                </p>
+                <ul className="space-y-1">
+                  {researchDetails.characteristics.map((item) => (
+                    <li key={item} className="flex gap-2 text-[10px] leading-4 text-slate-300">
+                      <span className="text-orange-300">•</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Mapped units · instruments
+                </p>
+                <p className="text-[10px] leading-4 text-slate-300">
+                  {researchDetails.mappedUnits.join(", ")}
+                </p>
+                <p className="mt-1 text-[10px] leading-4 text-slate-400">
+                  {researchDetails.instruments.join(", ")}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Interpretation
+                </p>
+                <p className="text-[10px] leading-5 text-slate-300">
+                  {researchDetails.interpretationNote}
+                </p>
+              </div>
+
+              <div className="border-t border-white/[0.07] pt-3">
+                <p className="mb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">
+                  Data origin
+                </p>
+                <p className="text-[10px] leading-4 text-slate-400">{researchDetails.dataOrigin}</p>
+                <a
+                  href={researchDetails.source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex text-[10px] font-medium text-orange-200 underline decoration-orange-200/30 underline-offset-4 hover:text-orange-100"
+                >
+                  {researchDetails.sourceName} ↗
+                </a>
+              </div>
+            </div>
           )}
 
           <div className="mt-3 flex gap-2">

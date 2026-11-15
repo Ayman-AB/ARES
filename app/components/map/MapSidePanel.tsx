@@ -39,7 +39,6 @@ export default function MapSidePanel(props: MapSidePanelProps) {
     open, onOpenChange, baseId, onBaseChange, baseOpacity, onBaseOpacityChange, overlayState, onOverlayChange,
     places, selectedPlace, onSelectPlace, onRemovePlace, routes, onRemoveRoute, onClearRoutes,
   } = props;
-
   if (!open) {
     return (
       <button
@@ -232,7 +231,7 @@ export default function MapSidePanel(props: MapSidePanelProps) {
 
         <section className="pb-1">
           <div className="mb-2.5 flex items-center gap-2.5">
-            <span className="font-mono text-[10px] text-orange-300/80">04</span>
+            <span className="font-mono text-[10px] text-orange-300/80">05</span>
             <h4 className={sectionTitle}>Measured routes</h4>
             {routes.length > 0 && (
               <button
