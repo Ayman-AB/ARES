@@ -34,11 +34,13 @@ import {
 import { MISSION_PROFILES, analyzeRoute } from "../../lib/mission-sim";
 import LayerSwitcher from "../map/LayerSwitcher";
 import MapComponent from "../map/MapComponent";
+import MapLegend, { type MapLegendGroup } from "../map/MapLegend";
 import { useMarsLayers } from "../map/useMarsLayers";
 import MissionDashboard from "./MissionDashboard";
 import { MissionEditor, MissionLibrary, type PlannerTool } from "./MissionEditor";
 import {
   LANDER_FEATURE_ID,
+  HAZARD_RGB,
   SEVERITY_HEX,
   createHazardLayer,
   createProbeLayer,
@@ -448,6 +450,49 @@ export default function MissionPlanner() {
   const hint =
     tool === "waypoint" ? "Click to drop a waypoint · Esc to stop" : tool === "lander" ? "Click to place the lander · Esc to cancel" : null;
 
+  const mapLegendGroups = useMemo<MapLegendGroup[]>(() => {
+    const groups: MapLegendGroup[] = [
+      {
+        title: "Route screening",
+        description: "Modeled terrain severity only; not a safety clearance.",
+        items: [
+          { label: "Within modeled limits", color: SEVERITY_HEX[0], shape: "line" },
+          { label: "Caution threshold", color: SEVERITY_HEX[1], shape: "line" },
+          { label: "No-go threshold", color: SEVERITY_HEX[2], shape: "line", dashed: true },
+        ],
+      },
+      {
+        title: "Mission markers",
+        items: [
+          { label: "Waypoint", color: "#fb923c", shape: "circle" },
+          { label: "Lander", color: "#38bdf8", shape: "triangle" },
+          ...(showSites
+            ? [
+                { label: "Science site", color: "#2dd4bf", shape: "diamond" as const },
+                { label: "Lander site", color: "#38bdf8", shape: "diamond" as const },
+              ]
+            : []),
+        ],
+      },
+    ];
+
+    if (showHazards) {
+      groups.push({
+        title: "Approximate hazard zones",
+        description: "Synthetic planning overlays, not remotely sensed obstacle data.",
+        items: [
+          { label: "Sand", color: `rgb(${HAZARD_RGB.sand})`, shape: "area" },
+          { label: "Scarp", color: `rgb(${HAZARD_RGB.scarp})`, shape: "area" },
+          { label: "Wall", color: `rgb(${HAZARD_RGB.wall})`, shape: "area" },
+          { label: "Crater", color: `rgb(${HAZARD_RGB.crater})`, shape: "area" },
+          { label: "Boulders", color: `rgb(${HAZARD_RGB.boulders})`, shape: "area" },
+        ],
+      });
+    }
+
+    return groups;
+  }, [showHazards, showSites]);
+
   // --- Render ------------------------------------------------------------------------
   const tabBtn = (id: Tab, text: string) => (
     <button
@@ -474,6 +519,13 @@ export default function MissionPlanner() {
           describeCoordinate={describeCursor}
           heightClassName="h-[62vh] min-h-[380px] lg:h-[calc(100vh-11rem)]"
         >
+          <MapLegend
+            baseId={layerControls.baseId}
+            overlayState={layerControls.overlayState}
+            placement="right"
+            legendGroups={mapLegendGroups}
+          />
+
           {/* Mission chip */}
           <div className="pointer-events-none absolute left-14 top-3 z-10 max-w-[calc(100%-8rem)] rounded-lg border border-white/10 bg-slate-950/85 px-3 py-2 shadow-lg backdrop-blur-md">
             <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-orange-200/70">
@@ -486,16 +538,6 @@ export default function MissionPlanner() {
               {analysis.totalKm.toFixed(2)} km · {profile.short} ·{" "}
               {analysis.warnings.length ? `${analysis.warnings.length} alert${analysis.warnings.length > 1 ? "s" : ""}` : "no alerts"}
             </p>
-          </div>
-
-          {/* Severity legend */}
-          <div className="pointer-events-none absolute right-3 top-3 z-10 flex gap-2.5 rounded-md bg-slate-950/80 px-2.5 py-1.5 text-[10px] text-slate-300 ring-1 ring-white/10">
-            {(["ok", "caution", "no-go"] as const).map((l, i) => (
-              <span key={l} className="flex items-center gap-1.5">
-                <span className="h-0.5 w-3.5 rounded" style={{ background: SEVERITY_HEX[i as 0 | 1 | 2] }} />
-                {l}
-              </span>
-            ))}
           </div>
 
           {hint && (

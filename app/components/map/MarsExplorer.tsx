@@ -396,6 +396,7 @@ export default function MarsExplorer({
         geologyItems={geologyLegendItems}
         geologyLoading={geologyLoading}
         geologyError={geologyError}
+        showJezeroGeology
       />
 
       {hint && (

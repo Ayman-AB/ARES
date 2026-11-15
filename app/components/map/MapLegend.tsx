@@ -10,9 +10,23 @@ import type { OverlayState } from "./useMarsLayers";
 interface MapLegendProps {
   baseId: string;
   overlayState: OverlayState;
-  geologyItems: MarsGeologyLegendItem[];
-  geologyLoading: boolean;
-  geologyError: string | null;
+  geologyItems?: MarsGeologyLegendItem[];
+  geologyLoading?: boolean;
+  geologyError?: string | null;
+  showJezeroGeology?: boolean;
+  placement?: "left" | "right";
+  legendGroups?: MapLegendGroup[];
+}
+
+export interface MapLegendGroup {
+  title: string;
+  description?: string;
+  items: Array<{
+    label: string;
+    color: string;
+    shape: "line" | "circle" | "square" | "diamond" | "triangle" | "area";
+    dashed?: boolean;
+  }>;
 }
 
 interface ArcGisLegendEntry {
@@ -77,12 +91,60 @@ function LayerLegend({ layer }: { layer: MarsLayerDef }) {
   );
 }
 
+function LegendGroup({ group }: { group: MapLegendGroup }) {
+  return (
+    <section className="border-t border-white/[0.07] pt-2.5">
+      <h4 className="text-[10px] font-semibold leading-4 text-slate-100">{group.title}</h4>
+      {group.description && (
+        <p className="mt-1 text-[9px] leading-4 text-slate-500">{group.description}</p>
+      )}
+      <div className="mt-2 space-y-1">
+        {group.items.map((item) => (
+          <div key={item.label} className="flex items-center gap-2 text-[9px] leading-3 text-slate-300">
+            <span
+              aria-hidden="true"
+              className={`shrink-0 border ${
+                item.shape === "line"
+                  ? `h-[3px] w-4 rounded-full ${item.dashed ? "border-t border-dashed" : "border-0"}`
+                  : item.shape === "circle"
+                    ? "h-2.5 w-2.5 rounded-full"
+                    : item.shape === "diamond"
+                      ? "h-2.5 w-2.5 rotate-45 rounded-[1px]"
+                      : item.shape === "triangle"
+                        ? "h-3 w-3 border-0"
+                        : item.shape === "area"
+                          ? "h-3 w-3 rounded-sm"
+                          : "h-2.5 w-2.5 rounded-sm"
+              }`}
+              style={{
+                backgroundColor: item.color,
+                borderColor: item.color,
+                opacity: item.shape === "area" ? 0.3 : 1,
+                ...(item.shape === "triangle"
+                  ? { clipPath: "polygon(50% 0, 0 100%, 100% 100%)" }
+                  : {}),
+                ...(item.shape === "line" && item.dashed
+                  ? { backgroundColor: "transparent", borderColor: item.color }
+                  : {}),
+              }}
+            />
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function MapLegend({
   baseId,
   overlayState,
-  geologyItems,
-  geologyLoading,
-  geologyError,
+  geologyItems = [],
+  geologyLoading = false,
+  geologyError = null,
+  showJezeroGeology = false,
+  placement = "left",
+  legendGroups = [],
 }: MapLegendProps) {
   const [open, setOpen] = useState(true);
   const [globalLegend, setGlobalLegend] = useState<GlobalLegendState>({ status: "idle" });
@@ -127,7 +189,11 @@ export default function MapLegend({
   }, [globalGeologyVisible, globalLegendUrl, retryToken]);
 
   return (
-    <div className="pointer-events-auto absolute left-14 top-3 z-10 w-[min(19rem,calc(100vw-5rem))]">
+    <div
+      className={`pointer-events-auto absolute top-3 z-10 w-[min(19rem,calc(100vw-5rem))] ${
+        placement === "left" ? "left-14" : "right-3"
+      }`}
+    >
       {!open ? (
         <button
           type="button"
@@ -204,7 +270,12 @@ export default function MapLegend({
               </div>
             ))}
 
-            <section className="border-t border-white/[0.07] pt-2.5">
+            {legendGroups.map((group) => (
+              <LegendGroup key={group.title} group={group} />
+            ))}
+
+            {showJezeroGeology ? (
+              <section className="border-t border-white/[0.07] pt-2.5">
               <div className="flex items-start justify-between gap-2">
                 <h4 className="text-[10px] font-semibold leading-4 text-slate-100">
                   Jezero mapped geology
@@ -257,7 +328,8 @@ export default function MapLegend({
                   ))}
                 </div>
               )}
-            </section>
+              </section>
+            ) : null}
           </div>
         </section>
       )}

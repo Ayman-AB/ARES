@@ -190,7 +190,7 @@ export function createSiteLayer(sites: JezeroSite[]) {
 }
 
 // --- Hazard zones -------------------------------------------------------------
-const HAZARD_RGB: Record<HazardKind, string> = {
+export const HAZARD_RGB: Record<HazardKind, string> = {
   sand: "250,204,21",
   scarp: "251,146,60",
   wall: "248,113,113",
