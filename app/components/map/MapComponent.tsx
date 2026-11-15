@@ -156,8 +156,7 @@ export default function MapComponent({
       map.dispose();
       throw new Error("OpenLayers failed to create the Mars map viewport.");
     }
-    viewport.addEventListener("pointerleave", onLeave);
-
+    viewport.addEventListener("pointerleave", onLeave) 
     mapRef.current = map;
     onMapReadyRef.current?.(map);
 
